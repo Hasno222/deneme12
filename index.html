@@ -3,41 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Parke Yerleşim Hesaplama</title>
+  <title>Parke Hassas Kesim ve Yerleşim Hesabı</title>
   <style>
     body {
-      font-family: sans-serif;
-      max-width: 850px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 900px;
       margin: auto;
-      padding: 10px;
+      padding: 15px;
       background: #eef0f2;
+      color: #263238;
     }
-    h2, h3 { color: #263238; }
-    h2 { margin-bottom: 10px; }
-    h3 { margin: 14px 0 8px; font-size: 15px; }
+    h2, h3 { color: #263238; margin-bottom: 10px; }
     .panel {
       background: #fff;
       border-radius: 8px;
-      padding: 10px 12px;
+      padding: 15px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      margin-bottom: 12px;
+      margin-bottom: 15px;
     }
     .form-group {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     .form-group label {
       flex: 1 1 220px;
       font-size: 14px;
+      font-weight: 600;
       color: #37474f;
     }
-    .form-group input,
-    .form-group select {
+    .form-group input, .form-group select {
       flex: 2 1 150px;
-      padding: 6px;
+      padding: 8px;
       font-size: 14px;
       border: 1px solid #cfd8dc;
       border-radius: 4px;
@@ -45,24 +44,25 @@
     .sub-inputs {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
+      gap: 8px;
       flex: 2 1 150px;
     }
     .sub-inputs input {
       width: 100%;
-      padding: 4px;
+      padding: 6px;
       font-size: 13px;
+      box-sizing: border-box;
     }
     .hint {
       font-size: 12px;
       color: #78909c;
       flex-basis: 100%;
-      margin-top: -6px;
+      margin-top: -4px;
     }
     button {
-      margin: 8px 6px 4px 0;
-      padding: 8px 14px;
+      padding: 10px 18px;
       font-size: 14px;
+      font-weight: 600;
       border: none;
       background-color: #2f6b5e;
       color: white;
@@ -75,181 +75,125 @@
     .toolbar {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
+      gap: 8px;
+      margin-bottom: 15px;
     }
     .canvas-wrapper {
       overflow: auto;
       max-width: 100%;
       border: 1px solid #37474f;
-      border-radius: 4px;
-      margin-top: 8px;
+      border-radius: 6px;
       background: #cfd8dc;
+      margin-bottom: 15px;
     }
-    #canvas { display: block; touch-action: pan-x pan-y; }
-    #tooltip {
-      position: absolute;
-      background: #263238;
-      color: #fff;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 13px;
-      display: none;
-      pointer-events: none;
-      z-index: 10;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    }
+    #canvas { display: block; }
     #stats {
-      margin-top: 12px;
-      font-size: 14px;
       background: #fff;
-      padding: 10px 12px;
+      padding: 15px;
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      line-height: 1.7;
-    }
-    #stats .warn { color: #b23b3b; }
-    .error-box {
-      background: #fdecea;
-      color: #b23b3b;
-      border: 1px solid #f5b7b1;
-      padding: 10px;
-      border-radius: 6px;
-      margin-top: 10px;
-      font-size: 14px;
       line-height: 1.6;
+      margin-bottom: 15px;
     }
-    .cost-section {
-      margin-top: 10px;
-      padding: 10px 12px;
+    .table-container {
       background: #fff;
       border-radius: 8px;
+      padding: 15px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      overflow-x: auto;
     }
-    #costResult { margin-top: 8px; font-size: 14px; line-height: 1.6; }
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      font-size: 12px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+    th, td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #cfd8dc;
+    }
+    th {
+      background-color: #f0f4f8;
       color: #37474f;
-      margin-top: 8px;
+      font-weight: 600;
     }
-    .legend span { display: inline-flex; align-items: center; gap: 5px; }
-    .swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+    tr:nth-child(even) { background-color: #fafafa; }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    .badge-cut { background: #ffe0b2; color: #e65100; }
   </style>
 </head>
 <body>
-  <h2>Parke Yerleşim Hesaplama</h2>
+
+  <h2>Parke Açılı Kesim ve Yerleşim Simülatörü</h2>
 
   <div class="panel">
-    <div class="form-group"><label>Oda Genişliği (cm):</label><input type="number" id="roomWidth" value="385" /></div>
-    
     <div class="form-group">
-      <label>Sağ Duvar Ölçüleri (6 Nokta, Üstten Alta cm):</label>
+      <label>Oda Yüksekliği / Boyu (cm):</label>
+      <input type="number" id="roomHeight" value="200" />
+      <div class="hint">Yukarıdan aşağıya odanın toplam boyu.</div>
+    </div>
+
+    <div class="form-group">
+      <label>Sağ Duvar Ölçüleri (6 Nokta - Üstten Alta cm):</label>
       <div class="sub-inputs">
-        <input type="number" id="r1" value="200">
-        <input type="number" id="r2" value="200">
-        <input type="number" id="r3" value="199">
-        <input type="number" id="r4" value="200">
-        <input type="number" id="r5" value="201">
-        <input type="number" id="r6" value="200">
+        <input type="number" id="r1" value="460" title="1. Nokta (En Üst)">
+        <input type="number" id="r2" value="459.4" title="2. Nokta">
+        <input type="number" id="r3" value="458.8" title="3. Nokta">
+        <input type="number" id="r4" value="458.2" title="4. Nokta">
+        <input type="number" id="r5" value="457.6" title="5. Nokta">
+        <input type="number" id="r6" value="457.0" title="6. Nokta (En Alt)">
       </div>
-      <div class="hint">Sağ duvarın üstten alta doğru eşit aralıklarla alınmış 6 boy ölçüsü.</div>
+      <div class="hint">Sağ üstten (460 cm) sağ alta (457 cm) doğru kademeli genişlikler.</div>
     </div>
 
-    <div class="form-group"><label>Parke Uzunluğu (cm):</label><input type="number" id="tileLength" value="120" /></div>
-    <div class="form-group"><label>Parke Genişliği (cm):</label><input type="number" id="tileHeight" value="20" /></div>
-    <div class="form-group"><label>Duvar Boşluğu (cm):</label><input type="number" id="margin" value="1" /></div>
-    <div class="form-group"><label>Testere Payı (cm):</label><input type="number" id="cutLoss" value="0.3" step="0.1" /></div>
-
-    <div class="form-group">
-      <label>Minimum Parke Uzunluğu (cm):</label>
-      <input type="number" id="minLength" value="5" />
-    </div>
-    <div class="form-group">
-      <label>Minimum Parke Genişliği (cm):</label>
-      <input type="number" id="minWidth" value="8" />
-    </div>
-
-    <div class="form-group">
-      <label>Serim Yönü:</label>
-      <select id="pattern">
-        <option value="duz">Düz</option>
-        <option value="yatay">Yatay</option>
-      </select>
-    </div>
+    <div class="form-group"><label>Parke Plaka Boyu (cm):</label><input type="number" id="tileLength" value="120" /></div>
+    <div class="form-group"><label>Parke Plaka Eni (cm):</label><input type="number" id="tileHeight" value="20" /></div>
+    <div class="form-group"><label>Duvar Genleşme Payı (cm):</label><input type="number" id="margin" value="1.0" step="0.1" /></div>
+    <div class="form-group"><label>Testere Bıçak Payı (cm):</label><input type="number" id="cutLoss" value="0.3" step="0.1" /></div>
+    <div class="form-group"><label>Minimum Kullanılabilir Parça Boyu (cm):</label><input type="number" id="minLength" value="20" /></div>
   </div>
 
   <div class="toolbar">
-    <button onclick="drawFloor()">Parkeleri Yerleştir</button>
-    <button onclick="downloadImage()">PNG Olarak Kaydet</button>
-    <button onclick="downloadPDF()">📄 PDF Olarak Kaydet</button>
-    <button class="secondary" onclick="toggleCostSection()">💰 Malzeme ve Maliyet Hesabı</button>
+    <button onclick="calculateAndDraw()">Yerleşimi Hesabla & Kesim Listesi Oluştur</button>
   </div>
 
-  <div id="errorBox" class="error-box" style="display:none;"></div>
-
-  <div id="costSection" class="cost-section" style="display:none;">
-    <h3>Malzeme ve Maliyet Hesabı</h3>
-    <div class="form-group"><label>Kutu Fiyatı (₺):</label><input type="number" id="boxPrice" /></div>
-    <div class="form-group"><label>Kutudaki Alan (m²):</label><input type="number" id="boxCoverage" step="0.01" /></div>
-    <button onclick="calculateCost()">Hesapla</button>
-    <div id="costResult"></div>
-  </div>
-
-  <div class="toolbar">
-    <button class="secondary" onclick="zoomIn()">➕ Yakınlaştır</button>
-    <button class="secondary" onclick="zoomOut()">➖ Uzaklaştır</button>
-    <button class="secondary" onclick="fitToScreen()">🔳 Sığdır</button>
-  </div>
-
-  <div class="canvas-wrapper" id="canvasWrapper">
+  <div class="canvas-wrapper">
     <canvas id="canvas"></canvas>
   </div>
-  <div class="legend">
-    <span><i class="swatch" style="background:linear-gradient(#c69a63,#a87b45);border:1px solid #6b4423;"></i>Tam parke</span>
-    <span><i class="swatch" style="background:linear-gradient(#e8c894,#d1a565);border:1px dashed #8a5a2b;"></i>Kesilmiş parça</span>
-    <span><i class="swatch" style="background:repeating-linear-gradient(45deg,#f2f2f2,#f2f2f2 4px,#dcdcdc 4px,#dcdcdc 8px);border:1px dashed #b23b3b;"></i>Döşenemeyen boşluk</span>
-  </div>
-  <div id="tooltip"></div>
+
   <div id="stats"></div>
+
+  <div class="table-container">
+    <h3>Her Bir Sıra İçin En Sağ Parça Kesim Listesi</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Sıra No</th>
+          <th>Sıradaki Parça Sayısı</th>
+          <th>Sol Parçalar (Düz)</th>
+          <th>Son Parça Üst Kenar</th>
+          <th>Son Parça Alt Kenar</th>
+          <th>Fark / Açı Durumu</th>
+        </tr>
+      </thead>
+      <tbody id="cutTableBody">
+      </tbody>
+    </table>
+  </div>
 
   <script>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    const tooltip = document.getElementById("tooltip");
-    const statsDiv = document.getElementById("stats");
-    const errorBox = document.getElementById("errorBox");
-    const canvasWrapper = document.getElementById("canvasWrapper");
 
-    let tiles = [];
-    let lastLayout = null;
-    let zoomLevel = 1;
-    let baseW = 0, baseH = 0;
-    const RENDER_SCALE = 2;
-    const CANVAS_BG = "#fdfaf5";
-
-    let gapPattern = null;
-    function getGapPattern() {
-      if (gapPattern) return gapPattern;
-      const off = document.createElement("canvas");
-      off.width = 10; off.height = 10;
-      const octx = off.getContext("2d");
-      octx.fillStyle = "#f2f2f2";
-      octx.fillRect(0, 0, 10, 10);
-      octx.strokeStyle = "#dcdcdc";
-      octx.lineWidth = 2;
-      octx.beginPath();
-      octx.moveTo(0, 10); octx.lineTo(10, 0);
-      octx.stroke();
-      gapPattern = ctx.createPattern(off, "repeat");
-      return gapPattern;
-    }
-
-    function getValues() {
+    function getInputs() {
       return {
-        roomWidth: +document.getElementById("roomWidth").value,
+        roomHeight: +document.getElementById("roomHeight").value,
         rightWall: [
           +document.getElementById("r1").value,
           +document.getElementById("r2").value,
@@ -262,320 +206,194 @@
         tileHeight: +document.getElementById("tileHeight").value,
         margin: +document.getElementById("margin").value,
         cutLoss: +document.getElementById("cutLoss").value,
-        minLength: +document.getElementById("minLength").value,
-        minWidth: +document.getElementById("minWidth").value,
-        pattern: document.getElementById("pattern").value,
+        minLength: +document.getElementById("minLength").value
       };
     }
 
-    function validateInputs(v) {
-      const errors = [];
-      if (!(v.roomWidth > 0)) errors.push("Oda genişliği 0'dan büyük olmalı.");
-      v.rightWall.forEach((val, i) => {
-        if (!(val > 0)) errors.push(`Sağ duvar ${i+1}. nokta ölçüsü geçersiz.`);
-      });
-      if (!(v.tileLength > 0)) errors.push("Parke uzunluğu 0'dan büyük olmalı.");
-      if (!(v.tileHeight > 0)) errors.push("Parke genişliği 0'dan büyük olmalı.");
-      return errors;
+    // Y yüksekliğindeki net duvar genişliğini hesaplar
+    function getRightWallWidthAtY(y, roomHeight, rightWall) {
+      let ratio = y / roomHeight;
+      if (ratio < 0) ratio = 0;
+      if (ratio > 1) ratio = 1;
+      
+      let indexFloat = ratio * 5;
+      let idx1 = Math.floor(indexFloat);
+      let idx2 = Math.min(5, Math.ceil(indexFloat));
+      let t = indexFloat - idx1;
+
+      return rightWall[idx1] + (rightWall[idx2] - rightWall[idx1]) * t;
     }
 
-    function layoutRoom(v) {
-      const usableW = v.roomWidth - v.margin * 2;
-      const avgRightHeight = v.rightWall.reduce((a, b) => a + b, 0) / 6;
-      const usableH = avgRightHeight - v.margin * 2;
+    function calculateAndDraw() {
+      const v = getInputs();
+      const tableBody = document.getElementById("cutTableBody");
+      tableBody.innerHTML = "";
 
-      const yatay = v.pattern === "yatay";
-      const usable_u = yatay ? usableH : usableW;
-      const usable_v = yatay ? usableW : usableH;
+      let currentY = v.margin; // Sol ve Üst duvardan 1 cm boşluk
+      let rowIdx = 1;
+      let leftoverFromPrevious = 0; // Bir önceki sıradan artan parça
 
-      const tileArea = v.tileLength * v.tileHeight;
-      const tilesOut = [];
+      let totalFullTiles = 0;
+      let totalCutTiles = 0;
+      let totalBoardsUsed = 0;
 
-      let fullCount = 0, cutCount = 0, boardsCut = 0;
-      let wasteArea = 0;
-      let gapArea = 0;
-      let leftPiece = null;
-      let cutDetails = [];
+      let drawCommands = [];
+      let rowReports = [];
 
-      const EPS = 1e-9;
-      const maxRows = 2000, maxCols = 5000;
+      const maxRoomWidth = Math.max(...v.rightWall);
 
-      function pushTile(uStart, vStart, uLen, vLen, isCut, isWidthCut, isGap, customLabel) {
-        let x, y, w, h;
-        if (yatay) { x = vStart; y = uStart; w = vLen; h = uLen; }
-        else { x = uStart; y = vStart; w = uLen; h = vLen; }
+      while (currentY + v.tileHeight <= v.roomHeight - v.margin + 0.001) {
+        let yTop = currentY;
+        let yBottom = currentY + v.tileHeight;
 
-        let label = customLabel || (isGap ? `Boşluk: ${vLen.toFixed(1)} cm` : (isWidthCut ? `${uLen.toFixed(1)}×${vLen.toFixed(1)}cm` : `${uLen.toFixed(1)} cm`));
-        tilesOut.push({ x, y, w, h, isCut: !!isCut, isWidthCut: !!isWidthCut, isGap: !!isGap, label });
-      }
+        // Bu sıranın üst ve alt kenarında duvara olan net kullanılabilir genişlikler (1 cm sol + 1 cm sağ pay düşülmüş)
+        let availableWidthTop = getRightWallWidthAtY(yTop, v.roomHeight, v.rightWall) - (v.margin * 2);
+        let availableWidthBottom = getRightWallWidthAtY(yBottom, v.roomHeight, v.rightWall) - (v.margin * 2);
 
-      let vPos = v.margin;
-      let rowIdx = 0;
-      let rowSafety = 0;
+        let currentX = v.margin;
+        let rowTiles = [];
 
-      while (vPos + v.tileHeight <= v.margin + usable_v + EPS && rowSafety < maxRows) {
-        rowSafety++;
-        let uPos = v.margin;
-
-        if (leftPiece !== null && leftPiece - v.cutLoss >= v.minLength) {
-          const usable = leftPiece - v.cutLoss;
-          pushTile(uPos, vPos, usable, v.tileHeight, true, false, false);
-          cutCount++;
-          uPos += usable;
-          leftPiece = null;
+        // 1. Sıra Başı Artık Parça Kullanımı
+        if (leftoverFromPrevious >= v.minLength) {
+          let pieceLen = leftoverFromPrevious;
+          rowTiles.push({ x: currentX, wTop: pieceLen, wBottom: pieceLen, isStartCut: true });
+          currentX += pieceLen;
+          leftoverFromPrevious = 0;
+          totalCutTiles++;
         }
 
-        let colSafety = 0;
-        while (uPos + v.tileLength <= v.margin + usable_u + EPS && colSafety < maxCols) {
-          pushTile(uPos, vPos, v.tileLength, v.tileHeight, false, false, false);
-          fullCount++;
-          uPos += v.tileLength;
-          colSafety++;
+        // 2. Tam Boy Parkeler
+        // Son parçaya yer kalsın diye mevcut X sınırına göre tam boy dizeriz
+        let minAvailableWidth = Math.min(availableWidthTop, availableWidthBottom);
+        while (currentX + v.tileLength < minAvailableWidth + v.margin) {
+          rowTiles.push({ x: currentX, wTop: v.tileLength, wBottom: v.tileLength, isFull: true });
+          currentX += v.tileLength;
+          totalFullTiles++;
         }
 
-        const kalan = (v.margin + usable_u) - uPos;
-        if (kalan > 1) {
-          pushTile(uPos, vPos, kalan, v.tileHeight, true, false, false);
-          cutCount++;
-          boardsCut++;
+        // 3. En Sağdaki Açılı Kesilecek Son Parça
+        let xOffsetFromMargin = currentX - v.margin;
+        let lastPieceTop = availableWidthTop - xOffsetFromMargin;
+        let lastPieceBottom = availableWidthBottom - xOffsetFromMargin;
 
-          const remaining = v.tileLength - kalan;
-          if ((remaining - v.cutLoss) >= v.minLength) {
-            leftPiece = remaining;
-          } else {
-            wasteArea += remaining * v.tileHeight;
-          }
+        rowTiles.push({
+          x: currentX,
+          wTop: lastPieceTop,
+          wBottom: lastPieceBottom,
+          isRightCut: true
+        });
+        totalCutTiles++;
+        totalBoardsUsed++;
+
+        // Son parçanın fire/artık hesabı (Tam boy plakadan kesildiği varsayılır)
+        let avgCutLen = (lastPieceTop + lastPieceBottom) / 2;
+        let remainingFromBoard = v.tileLength - avgCutLen - v.cutLoss;
+        if (remainingFromBoard >= v.minLength) {
+          leftoverFromPrevious = remainingFromBoard;
+        } else {
+          leftoverFromPrevious = 0;
         }
 
-        vPos += v.tileHeight;
+        // Çizim Komutlarına Ekle
+        drawCommands.push({ yTop, yBottom, tiles: rowTiles, height: v.tileHeight });
+
+        // Tablo Raporuna Ekle
+        let diff = lastPieceBottom - lastPieceTop;
+        let diffText = Math.abs(diff) < 0.05 
+          ? "Düz Kesim ($90^\\circ$)" 
+          : (diff > 0 ? `Alt kenar ${Math.abs(diff*10).toFixed(1)} mm daha UZUN` : `Alt kenar ${Math.abs(diff*10).toFixed(1)} mm daha KISA`);
+
+        rowReports.push({
+          row: rowIdx,
+          tileCount: rowTiles.length,
+          fullTilesCount: rowTiles.filter(t => t.isFull || t.isStartCut).length,
+          topLen: lastPieceTop.toFixed(1),
+          bottomLen: lastPieceBottom.toFixed(1),
+          diffText: diffText
+        });
+
+        currentY += v.tileHeight;
         rowIdx++;
       }
 
-      if (leftPiece !== null) {
-        wasteArea += leftPiece * v.tileHeight;
-      }
+      // Tuvale Çiz (Canvas)
+      renderCanvas(drawCommands, maxRoomWidth, v.roomHeight);
 
-      const remV = (v.margin + usable_v) - vPos;
-      if (remV > 0.3) {
-        if (remV >= v.minWidth) {
-          let uPos = v.margin;
-          let colSafety = 0;
-          while (uPos + v.tileLength <= v.margin + usable_u + EPS && colSafety < maxCols) {
-            pushTile(uPos, vPos, v.tileLength, remV, true, true, false, `Kesim: ${remV.toFixed(1)}cm`);
-            cutDetails.push(`Sıra ${rowIdx+1} (Parça ${colSafety+1}): Genişlik Kesimi = ${remV.toFixed(1)} cm`);
-            cutCount++;
-            boardsCut++;
-            uPos += v.tileLength;
-            colSafety++;
-          }
-        } else {
-          pushTile(v.margin, vPos, usable_u, remV, false, false, true);
-          gapArea += usable_u * remV;
-        }
-      }
-
-      const totalBoards = fullCount + boardsCut;
-      const totalMaterialArea = totalBoards * tileArea;
-      const coveredArea = tilesOut.filter(t => !t.isGap).reduce((s, t) => s + t.w * t.h, 0);
-      const fireRate = totalMaterialArea > 0 ? (wasteArea / totalMaterialArea) * 100 : 0;
-
-      return {
-        tiles: tilesOut, fullCount, cutCount, boardsCut, totalBoards,
-        wasteArea, gapArea, tileArea, totalMaterialArea, coveredArea, fireRate, cutDetails
-      };
-    }
-
-    function drawTileOnCanvas(t) {
-      const sx = t.x * RENDER_SCALE;
-      const sy = t.y * RENDER_SCALE;
-      const sw = t.w * RENDER_SCALE;
-      const sh = t.h * RENDER_SCALE;
-
-      if (t.isGap) {
-        ctx.fillStyle = getGapPattern();
-        ctx.fillRect(sx, sy, sw, sh);
-        ctx.save();
-        ctx.strokeStyle = "#b23b3b";
-        ctx.setLineDash([5, 4]);
-        ctx.strokeRect(sx, sy, sw, sh);
-        ctx.restore();
-      } else {
-        const grad = ctx.createLinearGradient(sx, sy, sx, sy + sh);
-        if (t.isCut) {
-          grad.addColorStop(0, "#f0d3a0");
-          grad.addColorStop(1, "#d1a565");
-        } else {
-          grad.addColorStop(0, "#c9a06c");
-          grad.addColorStop(1, "#a87b45");
-        }
-        ctx.fillStyle = grad;
-        ctx.fillRect(sx, sy, sw, sh);
-
-        ctx.save();
-        ctx.strokeStyle = t.isCut ? "#8a5a2b" : "#6b4423";
-        if (t.isCut) ctx.setLineDash([4, 3]);
-        ctx.strokeRect(sx, sy, sw, sh);
-        ctx.restore();
-      }
-
-      const minDim = Math.min(sw, sh);
-      if (minDim >= 16) {
-        ctx.fillStyle = t.isGap ? "#8a8a8a" : "#2b1c0e";
-        const fontSize = Math.max(7, Math.min(sw / 6, sh / 2, 11));
-        ctx.font = `${fontSize}px sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.save();
-        if (sh > sw) {
-          ctx.translate(sx + sw / 2, sy + sh / 2);
-          ctx.rotate(-Math.PI / 2);
-          ctx.fillText(t.label, 0, 0);
-        } else {
-          ctx.fillText(t.label, sx + sw / 2, sy + sh / 2);
-        }
-        ctx.restore();
-      }
-      tiles.push({ x: sx, y: sy, width: sw, height: sh, label: t.label });
-    }
-
-    function renderLayout(layout, roomWidth, roomHeight) {
-      tiles = [];
-      canvas.width = roomWidth * RENDER_SCALE;
-      canvas.height = roomHeight * RENDER_SCALE;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      canvas.style.background = CANVAS_BG;
-      layout.tiles.forEach(t => drawTileOnCanvas(t));
-      baseW = canvas.width;
-      baseH = canvas.height;
-    }
-
-    function updateStats(layout) {
-      let gapLine = "";
-      if (layout.gapArea > 0) {
-        gapLine = `<br><span class="warn"><strong>Döşenemeyen Boşluk:</strong> ${layout.gapArea.toFixed(1)} cm²</span>`;
-      }
-      let detailsHTML = "";
-      if (layout.cutDetails.length > 0) {
-        detailsHTML = `<br><strong>Açılı/Yamuk Duvar Kesim Listesi:</strong><br><small>` + layout.cutDetails.join("<br>") + `</small>`;
-      }
-      statsDiv.innerHTML = `
-        <strong>Tam Parke:</strong> ${layout.fullCount} adet<br>
-        <strong>Kesilmiş Parça:</strong> ${layout.cutCount} adet<br>
-        <strong>Kullanılan Toplam Parke:</strong> ${layout.totalBoards} adet<br>
-        <strong>Kaplanan Alan:</strong> ${(layout.coveredArea / 10000).toFixed(2)} m²<br>
-        <strong>Fire Oranı:</strong> %${layout.fireRate.toFixed(2)}${gapLine}${detailsHTML}
+      // İstatistikleri Güncelle
+      document.getElementById("stats").innerHTML = `
+        <strong>Toplam Sıra Sayısı:</strong> ${rowIdx - 1} sıra<br>
+        <strong>Kullanılan Toplam Plaka (Tahta):</strong> ${totalFullTiles + totalBoardsUsed} adet<br>
+        <strong>Sıra Sonu Açılı Kesilen Parça:</strong> ${rowIdx - 1} adet
       `;
+
+      // Tabloyu Doldur
+      rowReports.forEach(r => {
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>Sıra ${r.row}</strong></td>
+          <td>${r.tileCount} Parça</td>
+          <td>${r.fullTilesCount} adet düz dizildi</td>
+          <td><strong>${r.topLen} cm</strong></td>
+          <td><strong>${r.bottomLen} cm</strong></td>
+          <td><span class="badge badge-cut">${r.diffText}</span></td>
+        `;
+        tableBody.appendChild(tr);
+      });
     }
 
-    function drawFloor() {
-      const v = getValues();
-      const errors = validateInputs(v);
-      if (errors.length > 0) {
-        errorBox.innerHTML = errors.map(e => `• ${e}`).join("<br>");
-        errorBox.style.display = "block";
-        return;
-      }
-      errorBox.style.display = "none";
-      tooltip.style.display = "none";
+    function renderCanvas(drawCommands, roomWidth, roomHeight) {
+      const scale = 2.5; // 1 cm = 2.5 px
+      canvas.width = roomWidth * scale;
+      canvas.height = roomHeight * scale;
 
-      const layout = layoutRoom(v);
-      lastLayout = layout;
-      const maxH = Math.max(...v.rightWall);
-      renderLayout(layout, v.roomWidth, maxH);
-      updateStats(layout);
-      fitToScreen();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#fdfaf5";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      drawCommands.forEach(cmd => {
+        cmd.tiles.forEach(t => {
+          let x1 = t.x * scale;
+          let y1 = cmd.yTop * scale;
+          let y2 = cmd.yBottom * scale;
+
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x1 + t.wTop * scale, y1);
+          ctx.lineTo(x1 + t.wBottom * scale, y2);
+          ctx.lineTo(x1, y2);
+          ctx.closePath();
+
+          if (t.isRightCut) {
+            ctx.fillStyle = "#e8c894";
+            ctx.strokeStyle = "#8a5a2b";
+          } else if (t.isStartCut) {
+            ctx.fillStyle = "#f0d3a0";
+            ctx.strokeStyle = "#a87b45";
+          } else {
+            ctx.fillStyle = "#c9a06c";
+            ctx.strokeStyle = "#6b4423";
+          }
+
+          ctx.fill();
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          // Ölçü Metni
+          let avgW = (t.wTop + t.wBottom) / 2;
+          if (avgW * scale > 35) {
+            ctx.fillStyle = "#2b1c0e";
+            ctx.font = "11px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            let label = t.isRightCut ? `${t.wTop.toFixed(1)}/${t.wBottom.toFixed(1)}` : `${avgW.toFixed(0)}cm`;
+            ctx.fillText(label, x1 + (avgW * scale) / 2, y1 + (cmd.height * scale) / 2);
+          }
+        });
+      });
     }
 
-    canvas.addEventListener("click", function (e) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const x = (e.clientX - rect.left) * scaleX;
-      const y = (e.clientY - rect.top) * scaleY;
-
-      let closest = null;
-      let closestDist = Infinity;
-      for (let tile of tiles) {
-        const cx = tile.x + tile.width / 2;
-        const cy = tile.y + tile.height / 2;
-        const dist = Math.hypot(x - cx, y - cy);
-        if (dist < closestDist && dist < 40) {
-          closest = tile;
-          closestDist = dist;
-        }
-      }
-      if (closest) {
-        tooltip.innerText = closest.label;
-        tooltip.style.left = `${e.clientX + 10}px`;
-        tooltip.style.top = `${e.clientY + 10}px`;
-        tooltip.style.display = "block";
-      } else {
-        tooltip.style.display = "none";
-      }
-    });
-
-    function applyZoom() {
-      if (baseW === 0) return;
-      canvas.style.width = (baseW * zoomLevel) + "px";
-      canvas.style.height = (baseH * zoomLevel) + "px";
-    }
-    function zoomIn() { zoomLevel = Math.min(zoomLevel * 1.25, 6); applyZoom(); }
-    function zoomOut() { zoomLevel = Math.max(zoomLevel / 1.25, 0.15); applyZoom(); }
-    function fitToScreen() {
-      if (baseW === 0) return;
-      const available = canvasWrapper.clientWidth - 4;
-      zoomLevel = available > 0 ? Math.min(1, available / baseW) : 1;
-      applyZoom();
-    }
-    window.addEventListener("resize", () => { if (baseW > 0) fitToScreen(); });
-
-    function toggleCostSection() {
-      const el = document.getElementById("costSection");
-      el.style.display = el.style.display === "none" ? "block" : "none";
-    }
-
-    function calculateCost() {
-      const resultDiv = document.getElementById("costResult");
-      if (!lastLayout) {
-        resultDiv.innerHTML = `<span style="color:#b23b3b">Önce yerleşim hesaplayın.</span>`;
-        return;
-      }
-      const price = +document.getElementById("boxPrice").value;
-      const coverage = +document.getElementById("boxCoverage").value;
-      if (!(price >= 0) || !(coverage > 0)) {
-        resultDiv.innerHTML = `<span style="color:#b23b3b">Geçerli fiyat ve alan girin.</span>`;
-        return;
-      }
-      const totalAreaM2 = (lastLayout.totalBoards * lastLayout.tileArea) / 10000;
-      const neededBoxes = Math.ceil(totalAreaM2 / coverage);
-      const totalCost = neededBoxes * price;
-      resultDiv.innerHTML = `<strong>Gereken Kutu:</strong> ${neededBoxes} kutu<br><strong>Toplam Maliyet:</strong> ${totalCost.toLocaleString("tr-TR", {minimumFractionDigits: 2})} ₺`;
-    }
-
-    function downloadImage() {
-      const link = document.createElement("a");
-      link.download = "parke-yerlesim.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    }
-
-    async function downloadPDF() {
-      if (!lastLayout) { drawFloor(); }
-      const stats = statsDiv.innerText;
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF();
-      const imgData = canvas.toDataURL("image/png");
-      pdf.setFontSize(14);
-      pdf.text("Parke Kesim ve Yerleşim Raporu", 20, 20);
-      pdf.setFontSize(10);
-      const lines = pdf.splitTextToSize(stats, 170);
-      pdf.text(lines, 20, 30);
-      const imgWidth = 170;
-      const imgHeight = imgWidth * (canvas.height / canvas.width);
-      pdf.addImage(imgData, "PNG", 20, 70, imgWidth, imgHeight);
-      pdf.save(`parke-raporu.pdf`);
-    }
+    // İlk açılışta çalıştır
+    calculateAndDraw();
   </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
 </html>
