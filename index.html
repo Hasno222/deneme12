@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Parke Yerleşim - Çok Noktalı Duvar Ölçümlü</title>
+  <title>Parke Yerleşim Hesaplama</title>
   <style>
     body {
       font-family: sans-serif;
@@ -140,22 +140,22 @@
   </style>
 </head>
 <body>
-  <h2>Parke Yerleşim (Çok Noktalı Duvar Kontrollü)</h2>
+  <h2>Parke Yerleşim Hesaplama</h2>
 
   <div class="panel">
-    <div class="form-group"><label>Oda Genişliği / Üst Duvar (cm):</label><input type="number" id="roomWidth" value="385" /></div>
+    <div class="form-group"><label>Oda Genişliği (cm):</label><input type="number" id="roomWidth" value="385" /></div>
     
     <div class="form-group">
       <label>Sağ Duvar Ölçüleri (6 Nokta, Üstten Alta cm):</label>
       <div class="sub-inputs">
-        <input type="number" id="r1" value="200" placeholder="1. Nokta">
-        <input type="number" id="r2" value="200" placeholder="2. Nokta">
-        <input type="number" id="r3" value="199" placeholder="3. Nokta">
-        <input type="number" id="r4" value="200" placeholder="4. Nokta">
-        <input type="number" id="r5" value="201" placeholder="5. Nokta">
-        <input type="number" id="r6" value="200" placeholder="6. Nokta">
+        <input type="number" id="r1" value="200">
+        <input type="number" id="r2" value="200">
+        <input type="number" id="r3" value="199">
+        <input type="number" id="r4" value="200">
+        <input type="number" id="r5" value="201">
+        <input type="number" id="r6" value="200">
       </div>
-      <div class="hint">Sağ duvarın üstten alta doğru eşit aralıklarla alınmış 6 farklı boy ölçüsü.</div>
+      <div class="hint">Sağ duvarın üstten alta doğru eşit aralıklarla alınmış 6 boy ölçüsü.</div>
     </div>
 
     <div class="form-group"><label>Parke Uzunluğu (cm):</label><input type="number" id="tileLength" value="120" /></div>
@@ -182,10 +182,10 @@
   </div>
 
   <div class="toolbar">
-    <button onclick="drawFloor()">Parkeleri Yerleştir & Kesimleri Hesapla</button>
+    <button onclick="drawFloor()">Parkeleri Yerleştir</button>
     <button onclick="downloadImage()">PNG Olarak Kaydet</button>
     <button onclick="downloadPDF()">📄 PDF Olarak Kaydet</button>
-    <button class="secondary" onclick="toggleCostSection()">💰 Maliyet Hesabı</button>
+    <button class="secondary" onclick="toggleCostSection()">💰 Malzeme ve Maliyet Hesabı</button>
   </div>
 
   <div id="errorBox" class="error-box" style="display:none;"></div>
@@ -279,23 +279,9 @@
       return errors;
     }
 
-    // Belirli bir Y koordinatındaki sağ duvar sınırını 6 noktaya göre enterpolasyonla bulur
-    functioEisenRightLimit(y, usableHeight, rightWallVals, margin) {
-      const relY = Math.max(0, Math.min(usableHeight, y - margin));
-      const ratio = relY / usableHeight; // 0 ile 1 arası
-      const indexFloat = ratio * 5;
-      const idx1 = Math.floor(indexFloat);
-      const idx2 = Math.min(5, Math.ceil(indexFloat));
-      const t = indexFloat - idx1;
-      
-      const val1 = rightWallVals[idx1];
-      const val2 = rightWallVals[idx2];
-      return margin + (val1 + (val2 - val1) * t);
-    }
-
     function layoutRoom(v) {
       const usableW = v.roomWidth - v.margin * 2;
-      const avgRightHeight = v.rightWall.reduce((a,b)=>a+b,0) / 6;
+      const avgRightHeight = v.rightWall.reduce((a, b) => a + b, 0) / 6;
       const usableH = avgRightHeight - v.margin * 2;
 
       const yatay = v.pattern === "yatay";
@@ -330,13 +316,10 @@
       while (vPos + v.tileHeight <= v.margin + usable_v + EPS && rowSafety < maxRows) {
         rowSafety++;
         let uPos = v.margin;
-        let isWidthCut = false;
-        let currentThick = v.tileHeight;
 
-        // Satır başı sol parça kontrolü
         if (leftPiece !== null && leftPiece - v.cutLoss >= v.minLength) {
           const usable = leftPiece - v.cutLoss;
-          pushTile(uPos, vPos, usable, currentThick, true, false, false);
+          pushTile(uPos, vPos, usable, v.tileHeight, true, false, false);
           cutCount++;
           uPos += usable;
           leftPiece = null;
@@ -344,7 +327,7 @@
 
         let colSafety = 0;
         while (uPos + v.tileLength <= v.margin + usable_u + EPS && colSafety < maxCols) {
-          pushTile(uPos, vPos, v.tileLength, currentThick, false, false, false);
+          pushTile(uPos, vPos, v.tileLength, v.tileHeight, false, false, false);
           fullCount++;
           uPos += v.tileLength;
           colSafety++;
@@ -352,7 +335,7 @@
 
         const kalan = (v.margin + usable_u) - uPos;
         if (kalan > 1) {
-          pushTile(uPos, vPos, kalan, currentThick, true, false, false);
+          pushTile(uPos, vPos, kalan, v.tileHeight, true, false, false);
           cutCount++;
           boardsCut++;
 
@@ -372,18 +355,14 @@
         wasteArea += leftPiece * v.tileHeight;
       }
 
-      // Kenar / Duvar Sapması (Açılı Kesim) Hesaplaması
       const remV = (v.margin + usable_v) - vPos;
       if (remV > 0.3) {
         if (remV >= v.minWidth) {
-          // Bu son şeridin sağ duvardaki eğriliğe göre her noktada kaç cm kesilmesi gerektiğini hesapla
           let uPos = v.margin;
           let colSafety = 0;
           while (uPos + v.tileLength <= v.margin + usable_u + EPS && colSafety < maxCols) {
-            // Sağ kenara denk gelen yerdeki gerçek boyu bul
-            const localHeight = getEisenRightLimit(vPos + remV/2, usable_v, v.rightWall, v.margin) - vPos;
-            pushTile(uPos, vPos, v.tileLength, Math.max(5, localHeight), true, true, false, `Açılı: ${localHeight.toFixed(1)}cm`);
-            cutDetails.push(`Sıra ${rowIdx+1} (Parça ${colSafety+1}): Kesim Genişliği = ${localHeight.toFixed(1)} cm`);
+            pushTile(uPos, vPos, v.tileLength, remV, true, true, false, `Kesim: ${remV.toFixed(1)}cm`);
+            cutDetails.push(`Sıra ${rowIdx+1} (Parça ${colSafety+1}): Genişlik Kesimi = ${remV.toFixed(1)} cm`);
             cutCount++;
             boardsCut++;
             uPos += v.tileLength;
@@ -575,7 +554,7 @@
 
     function downloadImage() {
       const link = document.createElement("a");
-      link.download = "parke-yerlesim-egrisel.png";
+      link.download = "parke-yerlesim.png";
       link.href = canvas.toDataURL("image/png");
       link.click();
     }
