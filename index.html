@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2D & 3D İç Mekan Tasarım Aracı (Mobil + PC)</title>
+    <title>2D & 3D Profesyonel İç Mekan Tasarım Aracı</title>
     <!-- Three.js ve OrbitControls CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -12,12 +12,13 @@
         body { width: 100vw; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: #1e1e1e; color: #fff; }
         
         /* Üst Menü / Sekmeler */
-        header { height: 60px; background: #2d2d2d; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #444; flex-shrink: 0; }
+        header { height: 60px; background: #2d2d2d; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #444; flex-shrink: 0; z-index: 10; }
         .tabs { display: flex; gap: 8px; }
         .tab-btn { background: #3d3d3d; border: none; color: #aaa; padding: 8px 15px; font-size: 13px; cursor: pointer; border-radius: 4px; transition: 0.3s; }
         .tab-btn.active { background: #007acc; color: #fff; font-weight: bold; }
-        .info { font-size: 12px; color: #888; display: none; }
-        @media(min-width: 768px) { .info { display: block; } }
+        .toolbar-btns { display: flex; gap: 8px; }
+        .tool-btn { background: #444; border: none; color: #fff; padding: 8px 12px; font-size: 12px; cursor: pointer; border-radius: 4px; }
+        .tool-btn.active-tool { background: #28a745; }
 
         /* Ana İçerik Alanı */
         .content { flex: 1; position: relative; overflow: hidden; }
@@ -36,18 +37,16 @@
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 12px; margin-bottom: 5px; color: #ccc; }
         .form-group select, .form-group input { width: 100%; padding: 10px; background: #3c3c3c; border: 1px solid #555; color: #fff; border-radius: 4px; font-size: 14px; }
-        .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .form-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
         .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .btn-primary { background: #007acc; color: #fff; }
         .btn-secondary { background: #555; color: #fff; }
+        .btn-danger { background: #d9534f; color: #fff; }
 
         /* Bilgilendirme Overlay */
         .help-overlay {
             position: absolute; bottom: 15px; left: 15px; right: 15px; background: rgba(0,0,0,0.8);
-            padding: 8px 12px; border-radius: 5px; font-size: 11px; pointer-events: none; border: 1px solid #444; text-align: center;
-        }
-        @media(min-width: 768px) {
-            .help-overlay { width: auto; right: auto; text-align: left; }
+            padding: 8px 12px; border-radius: 5px; font-size: 11px; pointer-events: none; border: 1px solid #444; text-align: center; z-index: 5;
         }
     </style>
 </head>
@@ -58,14 +57,17 @@
             <button class="tab-btn active" onclick="switchTab('2d')">2D Çizim</button>
             <button class="tab-btn" onclick="switchTab('3d')">3D Görünüm</button>
         </div>
-        <div class="info">2D'de dokun/sürükle ile çiz.</div>
+        <div class="toolbar-btns">
+            <button class="tool-btn active-tool" id="btn-mode-draw" onclick="setMode('draw')">✏️ Çiz / Ekle</button>
+            <button class="tool-btn" id="btn-mode-select" onclick="setMode('select')">👆 Seç / Taşı</button>
+        </div>
     </header>
 
     <div class="content">
         <!-- 2D Canvas Görünümü -->
         <div id="pane-2d" class="view-pane active">
             <canvas id="canvas2d"></canvas>
-            <div class="help-overlay">Parmağınla veya fareyle sürükleyerek eleman çiz. Bitişler otomatik birleşir.</div>
+            <div class="help-overlay" id="help-text">Mod: Ekrana dokun, ölçü gir ve duvarı ekle. Son noktaya otomatik bağlanır.</div>
         </div>
 
         <!-- 3D Three.js Görünümü -->
@@ -76,7 +78,7 @@
 
     <!-- Düzenleme Paneli -->
     <div id="property-panel">
-        <h3>Eleman Özellikleri</h3>
+        <h3 id="panel-title">Duvar / Eleman Özellikleri</h3>
         <div class="form-group">
             <label>Eleman Tipi</label>
             <select id="elem-type" onchange="toggleElementOptions()">
@@ -85,6 +87,14 @@
                 <option value="window">Pencere</option>
                 <option value="column">Kolon</option>
             </select>
+        </div>
+        <div class="form-group" id="group-length">
+            <label>Uzunluk (cm)</label>
+            <input type="number" id="elem-length" value="200" min="10" max="2000">
+        </div>
+        <div class="form-group" id="group-angle">
+            <label>Açı (Derece: 0=Sağ, 90=Aşağı, 180=Sol, 270=Yukarı)</label>
+            <input type="number" id="elem-angle" value="0" min="0" max="360">
         </div>
         <div class="form-group" id="group-thickness">
             <label>Kalınlık / Genişlik (cm)</label>
@@ -100,16 +110,23 @@
             </select>
         </div>
         <div class="form-actions">
-            <button class="btn btn-secondary" onclick="cancelElement()">İptal</button>
-            <button class="btn btn-primary" onclick="saveElement()">Kaydet</button>
+            <button class="btn btn-danger" id="btn-delete" onclick="deleteSelectedElement()" style="display:none;">Sil</button>
+            <div style="display:flex; gap:10px; margin-left:auto;">
+                <button class="btn btn-secondary" onclick="cancelElement()">İptal</button>
+                <button class="btn btn-primary" onclick="saveElement()">Kaydet</button>
+            </div>
         </div>
     </div>
 
     <script>
         let currentTab = '2d';
+        let currentMode = 'draw'; // 'draw' veya 'select'
         let elements = [];
-        let currentDrawing = null;
+        let startPoint = null;
         let lastEndPoint = null;
+        let selectedElementIndex = null;
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
 
         const canvas2d = document.getElementById('canvas2d');
         const ctx = canvas2d.getContext('2d');
@@ -138,7 +155,19 @@
             }
         }
 
-        // --- Ortak Koordinat Yakalama (Mouse + Touch) ---
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('btn-mode-draw').classList.toggle('active-tool', mode === 'draw');
+            document.getElementById('btn-mode-select').classList.toggle('active-tool', mode === 'select');
+            
+            const helpText = document.getElementById('help-text');
+            if (mode === 'draw') {
+                helpText.innerText = "Mod: Ekrana dokun, ölçü gir ve duvarı ekle. Son noktaya otomatik bağlanır.";
+            } else {
+                helpText.innerText = "Mod: Bir elemana dokunarak sürükleyebilir veya üzerine tıklayıp düzenleyebilirsin.";
+            }
+        }
+
         function getClientPos(e) {
             if (e.touches && e.touches.length > 0) {
                 return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -146,66 +175,92 @@
             return { x: e.clientX, y: e.clientY };
         }
 
-        let isDrawing = false;
-        let tempStart = null;
-        let tempEnd = null;
-
-        function startDrawing(e) {
+        // --- Etkileşimler (Mouse / Touch) ---
+        function handleStart(e) {
             if (currentTab !== '2d') return;
             const rect = canvas2d.getBoundingClientRect();
             const pos = getClientPos(e);
             const x = pos.x - rect.left;
             const y = pos.y - rect.top;
 
-            if (lastEndPoint && Math.hypot(x - lastEndPoint.x, y - lastEndPoint.y) < 30) {
-                tempStart = { x: lastEndPoint.x, y: lastEndPoint.y };
-            } else {
-                tempStart = { x, y };
+            if (currentMode === 'draw') {
+                if (lastEndPoint && Math.hypot(x - lastEndPoint.x, y - lastEndPoint.y) < 35) {
+                    startPoint = { x: lastEndPoint.x, y: lastEndPoint.y };
+                } else {
+                    startPoint = { x, y };
+                }
+                openPropertyPanelForNew();
+            } else if (currentMode === 'select') {
+                // Tıklanan elemanı bul
+                selectedElementIndex = findElementAt(x, y);
+                if (selectedElementIndex !== null) {
+                    isDragging = true;
+                    const el = elements[selectedElementIndex];
+                    dragOffset.x = x - el.x1;
+                    dragOffset.y = y - el.y1;
+                }
             }
-            isDrawing = true;
             e.preventDefault();
         }
 
-        function moveDrawing(e) {
-            if (!isDrawing || currentTab !== '2d') return;
+        function handleMove(e) {
+            if (currentTab !== '2d' || currentMode !== 'select' || !isDragging || selectedElementIndex === null) return;
             const rect = canvas2d.getBoundingClientRect();
             const pos = getClientPos(e);
-            tempEnd = { x: pos.x - rect.left, y: pos.y - rect.top };
+            const x = pos.x - rect.left;
+            const y = pos.y - rect.top;
+
+            const el = elements[selectedElementIndex];
+            const length = Math.hypot(el.x2 - el.x1, el.y2 - el.y1);
+            const angle = Math.atan2(el.y2 - el.y1, el.x2 - el.x1);
+
+            el.x1 = x - dragOffset.x;
+            el.y1 = y - dragOffset.y;
+            el.x2 = el.x1 + Math.cos(angle) * length;
+            el.y2 = el.y1 + Math.sin(angle) * length;
+
             draw2D();
             e.preventDefault();
         }
 
-        function endDrawing(e) {
-            if (!isDrawing || currentTab !== '2d') return;
-            isDrawing = false;
-            
-            if (!tempEnd && tempStart) tempEnd = tempStart;
-
-            if (tempStart && tempEnd && Math.hypot(tempEnd.x - tempStart.x, tempEnd.y - tempStart.y) > 10) {
-                currentDrawing = {
-                    x1: tempStart.x, y1: tempStart.y,
-                    x2: tempEnd.x, y2: tempEnd.y,
-                    type: 'wall', thickness: 20, doorDir: 'in-left'
-                };
-                openPropertyPanel();
-            } else {
-                draw2D();
+        function handleEnd(e) {
+            if (isDragging) {
+                isDragging = false;
+                // Sürükleme bittiğinde tıklama gibi değerlendirip paneli açabiliriz
+                if (selectedElementIndex !== null) {
+                    openPropertyPanelForEdit(selectedElementIndex);
+                }
             }
-            tempStart = null;
-            tempEnd = null;
             e.preventDefault();
         }
 
-        // Mouse Olayları
-        canvas2d.addEventListener('mousedown', startDrawing);
-        canvas2d.addEventListener('mousemove', moveDrawing);
-        canvas2d.addEventListener('mouseup', endDrawing);
+        canvas2d.addEventListener('mousedown', handleStart);
+        canvas2d.addEventListener('mousemove', handleMove);
+        canvas2d.addEventListener('mouseup', handleEnd);
 
-        // Dokunmatik (Mobil) Olayları
-        canvas2d.addEventListener('touchstart', startDrawing, { passive: false });
-        canvas2d.addEventListener('touchmove', moveDrawing, { passive: false });
-        canvas2d.addEventListener('touchend', endDrawing, { passive: false });
+        canvas2d.addEventListener('touchstart', handleStart, { passive: false });
+        canvas2d.addEventListener('touchmove', handleMove, { passive: false });
+        canvas2d.addEventListener('touchend', handleEnd, { passive: false });
 
+        function findElementAt(x, y) {
+            for (let i = elements.length - 1; i >= 0; i--) {
+                const el = elements[i];
+                // Çizgiye olan uzaklık kontrolü
+                const dist = distToSegment({x, y}, {x: el.x1, y: el.y1}, {x: el.x2, y: el.y2});
+                if (dist < 15) return i;
+            }
+            return null;
+        }
+
+        function distToSegment(p, p1, p2) {
+            const l2 = Math.hypot(p2.x - p1.x, p2.y - p1.y) ** 2;
+            if (l2 === 0) return Math.hypot(p.x - p1.x, p.y - p1.y);
+            let t =((p.x - p1.x) * (p2.x - p1.x) + (p.y - p1.y) * (p2.y - p1.y)) / l2;
+            t = Math.max(0, Math.min(1, t));
+            return Math.hypot(p.x - (p1.x + t * (p2.x - p1.x)), p.y - (p1.y + t * (p2.y - p1.y)));
+        }
+
+        // --- Çizim ve Arayüz ---
         function draw2D() {
             ctx.clearRect(0, 0, canvas2d.width, canvas2d.height);
 
@@ -220,16 +275,9 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas2d.width, y); ctx.stroke();
             }
 
-            elements.forEach(el => drawElement2D(el));
-
-            if (isDrawing && tempStart && tempEnd) {
-                ctx.strokeStyle = '#007acc';
-                ctx.lineWidth = 4;
-                ctx.beginPath();
-                ctx.moveTo(tempStart.x, tempStart.y);
-                ctx.lineTo(tempEnd.x, tempEnd.y);
-                ctx.stroke();
-            }
+            elements.forEach((el, index) => {
+                drawElement2D(el, index === selectedElementIndex);
+            });
 
             if (lastEndPoint) {
                 ctx.fillStyle = '#00ff88';
@@ -239,12 +287,15 @@
             }
         }
 
-        function drawElement2D(el) {
+        function drawElement2D(el, isSelected) {
             ctx.beginPath();
             ctx.moveTo(el.x1, el.y1);
             ctx.lineTo(el.x2, el.y2);
 
-            if (el.type === 'wall') {
+            if (isSelected) {
+                ctx.strokeStyle = '#ffeb3b';
+                ctx.lineWidth = 6;
+            } else if (el.type === 'wall') {
                 ctx.strokeStyle = '#d4d4d4';
                 ctx.lineWidth = Math.max(4, el.thickness / 2);
             } else if (el.type === 'door') {
@@ -258,13 +309,45 @@
                 ctx.lineWidth = Math.max(8, el.thickness);
             }
             ctx.stroke();
+
+            // Ölçü Metni Yazdır
+            const length = Math.round(Math.hypot(el.x2 - el.x1, el.y2 - el.y1));
+            const midX = (el.x1 + el.x2) / 2;
+            const midY = (el.y1 + el.y2) / 2;
+            ctx.fillStyle = '#aaa';
+            ctx.font = '11px sans-serif';
+            ctx.fillText(length + 'cm', midX + 5, midY - 5);
         }
 
-        function openPropertyPanel() {
-            document.getElementById('property-panel').style.display = 'block';
+        // --- Panel İşlemleri ---
+        function openPropertyPanelForNew() {
+            selectedElementIndex = null;
+            document.getElementById('panel-title').innerText = "Yeni Eleman Ekle";
+            document.getElementById('group-length').style.display = 'block';
+            document.getElementById('group-angle').style.display = 'block';
+            document.getElementById('btn-delete').style.display = 'none';
+
             document.getElementById('elem-type').value = 'wall';
+            document.getElementById('elem-length').value = '200';
+            document.getElementById('elem-angle').value = '0';
             document.getElementById('elem-thickness').value = '20';
             toggleElementOptions();
+            document.getElementById('property-panel').style.display = 'block';
+        }
+
+        function openPropertyPanelForEdit(index) {
+            selectedElementIndex = index;
+            const el = elements[index];
+            document.getElementById('panel-title').innerText = "Elemanı Düzenle";
+            document.getElementById('group-length').style.display = 'none'; // Var olan nesnede açı/uzunluk yerine sürükleme kullanılır
+            document.getElementById('group-angle').style.display = 'none';
+            document.getElementById('btn-delete').style.display = 'block';
+
+            document.getElementById('elem-type').value = el.type;
+            document.getElementById('elem-thickness').value = el.thickness;
+            document.getElementById('elem-door-dir').value = el.doorDir || 'in-left';
+            toggleElementOptions();
+            document.getElementById('property-panel').style.display = 'block';
         }
 
         function toggleElementOptions() {
@@ -274,22 +357,55 @@
 
         function cancelElement() {
             document.getElementById('property-panel').style.display = 'none';
-            currentDrawing = null;
+            startPoint = null;
+            selectedElementIndex = null;
             draw2D();
         }
 
         function saveElement() {
-            if (!currentDrawing) return;
-            currentDrawing.type = document.getElementById('elem-type').value;
-            currentDrawing.thickness = parseFloat(document.getElementById('elem-thickness').value) || 20;
-            currentDrawing.doorDir = document.getElementById('elem-door-dir').value;
+            const type = document.getElementById('elem-type').value;
+            const thickness = parseFloat(document.getElementById('elem-thickness').value) || 20;
+            const doorDir = document.getElementById('elem-door-dir').value;
 
-            elements.push(currentDrawing);
-            lastEndPoint = { x: currentDrawing.x2, y: currentDrawing.y2 };
+            if (selectedElementIndex !== null) {
+                // Güncelleme
+                elements[selectedElementIndex].type = type;
+                elements[selectedElementIndex].thickness = thickness;
+                elements[selectedElementIndex].doorDir = doorDir;
+            } else if (startPoint) {
+                // Yeni Ekleme
+                const lengthCm = parseFloat(document.getElementById('elem-length').value) || 200;
+                const angleDeg = parseFloat(document.getElementById('elem-angle').value) || 0;
+                const angleRad = (angleDeg * Math.PI) / 180;
+
+                const x2 = startPoint.x + Math.cos(angleRad) * lengthCm;
+                const y2 = startPoint.y + Math.sin(angleRad) * lengthCm;
+
+                const newElement = {
+                    x1: startPoint.x, y1: startPoint.y,
+                    x2: x2, y2: y2,
+                    type: type,
+                    thickness: thickness,
+                    doorDir: doorDir
+                };
+
+                elements.push(newElement);
+                lastEndPoint = { x: x2, y: y2 };
+            }
 
             document.getElementById('property-panel').style.display = 'none';
-            currentDrawing = null;
+            startPoint = null;
+            selectedElementIndex = null;
             draw2D();
+        }
+
+        function deleteSelectedElement() {
+            if (selectedElementIndex !== null) {
+                elements.splice(selectedElementIndex, 1);
+                selectedElementIndex = null;
+                document.getElementById('property-panel').style.display = 'none';
+                draw2D();
+            }
         }
 
         // --- 3D Three.js Motoru ---
@@ -355,17 +471,19 @@
                 const wallHeight = 250;
                 const thickness = el.thickness || 20;
 
-                let color = 0xdddddd;
-                if (el.type === 'door') color = 0xdc7633;
-                if (el.type === 'window') color = 0x5dade2;
-                if (el.type === 'column') color = 0xaf7ac5;
-                if (el.type === 'wall') color = 0x566573;
+                let color = 0x566573;
+                let height = wallHeight;
+                let yPos = wallHeight / 2;
 
-                const geometry = new THREE.BoxGeometry(length, wallHeight, thickness);
+                if (el.type === 'door') { color = 0xdc7633; height = 200; yPos = 100; }
+                else if (el.type === 'window') { color = 0x5dade2; height = 100; yPos = 140; }
+                else if (el.type === 'column') { color = 0xaf7ac5; }
+
+                const geometry = new THREE.BoxGeometry(length, height, thickness);
                 const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.5 });
                 const mesh = new THREE.Mesh(geometry, material);
 
-                mesh.position.set((x1 + x2) / 2, wallHeight / 2, (z1 + z2) / 2);
+                mesh.position.set((x1 + x2) / 2, yPos, (z1 + z2) / 2);
                 mesh.rotation.y = -angle;
 
                 scene.add(mesh);
