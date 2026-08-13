@@ -2,48 +2,52 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D & 3D İç Mekan Tasarım Aracı</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2D & 3D İç Mekan Tasarım Aracı (Mobil + PC)</title>
     <!-- Three.js ve OrbitControls CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
         body { width: 100vw; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: #1e1e1e; color: #fff; }
         
         /* Üst Menü / Sekmeler */
-        header { height: 60px; background: #2d2d2d; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #444; }
-        .tabs { display: flex; gap: 10px; }
-        .tab-btn { background: #3d3d3d; border: none; color: #aaa; padding: 10px 20px; font-size: 14px; cursor: pointer; border-radius: 4px; transition: 0.3s; }
+        header { height: 60px; background: #2d2d2d; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #444; flex-shrink: 0; }
+        .tabs { display: flex; gap: 8px; }
+        .tab-btn { background: #3d3d3d; border: none; color: #aaa; padding: 8px 15px; font-size: 13px; cursor: pointer; border-radius: 4px; transition: 0.3s; }
         .tab-btn.active { background: #007acc; color: #fff; font-weight: bold; }
-        .info { font-size: 13px; color: #888; }
+        .info { font-size: 12px; color: #888; display: none; }
+        @media(min-width: 768px) { .info { display: block; } }
 
         /* Ana İçerik Alanı */
         .content { flex: 1; position: relative; overflow: hidden; }
         .view-pane { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
         .view-pane.active { display: block; }
 
-        canvas { display: block; background: #121212; cursor: crosshair; }
+        canvas { display: block; background: #121212; width: 100%; height: 100%; cursor: crosshair; }
 
         /* Düzenleme Paneli (Modal) */
         #property-panel {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #252526; border: 1px solid #454545; padding: 25px; border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7); z-index: 1000; width: 320px; display: none;
+            background: #252526; border: 1px solid #454545; padding: 20px; border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7); z-index: 1000; width: 90%; max-width: 320px; display: none;
         }
         #property-panel h3 { margin-bottom: 15px; font-size: 16px; color: #007acc; border-bottom: 1px solid #3d3d3d; padding-bottom: 8px; }
-        .form-group { margin-bottom: 15px; }
+        .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 12px; margin-bottom: 5px; color: #ccc; }
-        .form-group select, .form-group input { width: 100%; padding: 8px; background: #3c3c3c; border: 1px solid #555; color: #fff; border-radius: 4px; }
+        .form-group select, .form-group input { width: 100%; padding: 10px; background: #3c3c3c; border: 1px solid #555; color: #fff; border-radius: 4px; font-size: 14px; }
         .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .btn-primary { background: #007acc; color: #fff; }
         .btn-secondary { background: #555; color: #fff; }
 
         /* Bilgilendirme Overlay */
         .help-overlay {
-            position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.7);
-            padding: 10px 15px; border-radius: 5px; font-size: 12px; pointer-events: none; border: 1px solid #444;
+            position: absolute; bottom: 15px; left: 15px; right: 15px; background: rgba(0,0,0,0.8);
+            padding: 8px 12px; border-radius: 5px; font-size: 11px; pointer-events: none; border: 1px solid #444; text-align: center;
+        }
+        @media(min-width: 768px) {
+            .help-overlay { width: auto; right: auto; text-align: left; }
         }
     </style>
 </head>
@@ -51,17 +55,17 @@
 
     <header>
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('2d')">2D Çizim Alanı</button>
-            <button class="tab-btn" onclick="switchTab('3d')">3D Ön İzleme</button>
+            <button class="tab-btn active" onclick="switchTab('2d')">2D Çizim</button>
+            <button class="tab-btn" onclick="switchTab('3d')">3D Görünüm</button>
         </div>
-        <div class="info">İpucu: 2D'de tıkla ve sürükleyerek çizgi çek.</div>
+        <div class="info">2D'de dokun/sürükle ile çiz.</div>
     </header>
 
     <div class="content">
         <!-- 2D Canvas Görünümü -->
         <div id="pane-2d" class="view-pane active">
             <canvas id="canvas2d"></canvas>
-            <div class="help-overlay">Sol tık basılı tutup sürükleyerek eleman çizin. Son bitiş noktası yeni çizime otomatik bağlanır.</div>
+            <div class="help-overlay">Parmağınla veya fareyle sürükleyerek eleman çiz. Bitişler otomatik birleşir.</div>
         </div>
 
         <!-- 3D Three.js Görünümü -->
@@ -96,22 +100,20 @@
             </select>
         </div>
         <div class="form-actions">
-            <button class="btn btn-secondary" onclick="cancelElement()">İptal Et</button>
-            <button class="btn btn-primary" onclick="saveElement()">Kaydet & Ekle</button>
+            <button class="btn btn-secondary" onclick="cancelElement()">İptal</button>
+            <button class="btn btn-primary" onclick="saveElement()">Kaydet</button>
         </div>
     </div>
 
     <script>
-        // --- Global Değişkenler ---
         let currentTab = '2d';
-        let elements = []; // Tüm mimari elemanlar
+        let elements = [];
         let currentDrawing = null;
-        let lastEndPoint = null; // Otomatik kenetlenme (snapping) için son nokta
+        let lastEndPoint = null;
 
         const canvas2d = document.getElementById('canvas2d');
         const ctx = canvas2d.getContext('2d');
 
-        // Canvas Boyutlandırma
         function resizeCanvas() {
             canvas2d.width = canvas2d.parentElement.clientWidth;
             canvas2d.height = canvas2d.parentElement.clientHeight;
@@ -120,7 +122,6 @@
         window.addEventListener('resize', resizeCanvas);
         window.addEventListener('load', () => { resizeCanvas(); init3D(); });
 
-        // Sekme Değiştirme
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -137,42 +138,50 @@
             }
         }
 
-        // --- 2D Çizim Mantığı ---
+        // --- Ortak Koordinat Yakalama (Mouse + Touch) ---
+        function getClientPos(e) {
+            if (e.touches && e.touches.length > 0) {
+                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            return { x: e.clientX, y: e.clientY };
+        }
+
         let isDrawing = false;
         let tempStart = null;
         let tempEnd = null;
 
-        canvas2d.addEventListener('mousedown', (e) => {
+        function startDrawing(e) {
             if (currentTab !== '2d') return;
             const rect = canvas2d.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const pos = getClientPos(e);
+            const x = pos.x - rect.left;
+            const y = pos.y - rect.top;
 
-            // Eğer daha önceden çizilmiş bir nokta varsa ve çok uzakta değilsek, oradan başlat (Snap)
-            if (lastEndPoint && Math.hypot(x - lastEndPoint.x, y - lastEndPoint.y) < 25) {
+            if (lastEndPoint && Math.hypot(x - lastEndPoint.x, y - lastEndPoint.y) < 30) {
                 tempStart = { x: lastEndPoint.x, y: lastEndPoint.y };
             } else {
                 tempStart = { x, y };
             }
             isDrawing = true;
-        });
+            e.preventDefault();
+        }
 
-        canvas2d.addEventListener('mousemove', (e) => {
+        function moveDrawing(e) {
             if (!isDrawing || currentTab !== '2d') return;
             const rect = canvas2d.getBoundingClientRect();
-            tempEnd = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            const pos = getClientPos(e);
+            tempEnd = { x: pos.x - rect.left, y: pos.y - rect.top };
             draw2D();
-        });
+            e.preventDefault();
+        }
 
-        canvas2d.addEventListener('mouseup', (e) => {
+        function endDrawing(e) {
             if (!isDrawing || currentTab !== '2d') return;
             isDrawing = false;
-            const rect = canvas2d.getBoundingClientRect();
-            tempEnd = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            
+            if (!tempEnd && tempStart) tempEnd = tempStart;
 
-            // Çok kısa çizimleri engelle
-            if (Math.hypot(tempEnd.x - tempStart.x, tempEnd.y - tempStart.y) > 10) {
-                // Geçici çizimi kaydet ve paneli aç
+            if (tempStart && tempEnd && Math.hypot(tempEnd.x - tempStart.x, tempEnd.y - tempStart.y) > 10) {
                 currentDrawing = {
                     x1: tempStart.x, y1: tempStart.y,
                     x2: tempEnd.x, y2: tempEnd.y,
@@ -182,12 +191,25 @@
             } else {
                 draw2D();
             }
-        });
+            tempStart = null;
+            tempEnd = null;
+            e.preventDefault();
+        }
+
+        // Mouse Olayları
+        canvas2d.addEventListener('mousedown', startDrawing);
+        canvas2d.addEventListener('mousemove', moveDrawing);
+        canvas2d.addEventListener('mouseup', endDrawing);
+
+        // Dokunmatik (Mobil) Olayları
+        canvas2d.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas2d.addEventListener('touchmove', moveDrawing, { passive: false });
+        canvas2d.addEventListener('touchend', endDrawing, { passive: false });
 
         function draw2D() {
             ctx.clearRect(0, 0, canvas2d.width, canvas2d.height);
 
-            // Grid Çizgileri (Hafif Arka Plan)
+            // Grid Çizgileri
             ctx.strokeStyle = '#222';
             ctx.lineWidth = 1;
             const gridSize = 40;
@@ -198,12 +220,8 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas2d.width, y); ctx.stroke();
             }
 
-            // Kayıtlı Elemanları Çiz
-            elements.forEach(el => {
-                drawElement2D(el);
-            });
+            elements.forEach(el => drawElement2D(el));
 
-            // Aktif çizilen geçici çizgi
             if (isDrawing && tempStart && tempEnd) {
                 ctx.strokeStyle = '#007acc';
                 ctx.lineWidth = 4;
@@ -213,11 +231,10 @@
                 ctx.stroke();
             }
 
-            // Snap Noktası İşareti
             if (lastEndPoint) {
                 ctx.fillStyle = '#00ff88';
                 ctx.beginPath();
-                ctx.arc(lastEndPoint.x, lastEndPoint.y, 5, 0, Math.PI * 2);
+                ctx.arc(lastEndPoint.x, lastEndPoint.y, 6, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
@@ -243,7 +260,6 @@
             ctx.stroke();
         }
 
-        // --- Düzenleme Paneli İşlemleri ---
         function openPropertyPanel() {
             document.getElementById('property-panel').style.display = 'block';
             document.getElementById('elem-type').value = 'wall';
@@ -269,7 +285,7 @@
             currentDrawing.doorDir = document.getElementById('elem-door-dir').value;
 
             elements.push(currentDrawing);
-            lastEndPoint = { x: currentDrawing.x2, y: currentDrawing.y2 }; // Son noktayı güncelle (yapışma için)
+            lastEndPoint = { x: currentDrawing.x2, y: currentDrawing.y2 };
 
             document.getElementById('property-panel').style.display = 'none';
             currentDrawing = null;
@@ -294,7 +310,6 @@
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
 
-            // Işıklar
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
             scene.add(ambientLight);
 
@@ -302,12 +317,10 @@
             dirLight.position.set(200, 500, 300);
             scene.add(dirLight);
 
-            // Zemin Izgarası
             const gridHelper = new THREE.GridHelper(1000, 50, 0x444444, 0x222222);
             gridHelper.position.y = -1;
             scene.add(gridHelper);
 
-            // Döngü
             animate3D();
         }
 
@@ -317,9 +330,7 @@
             renderer.render(scene, camera);
         }
 
-        // 2D Elemanları 3D Model Nesnelerine Dönüştür
         function update3DScene() {
-            // Eski 3D yapı elemanlarını temizle (Grid ve Işıklar hariç)
             const removeList = [];
             scene.children.forEach(child => {
                 if (child.isMesh && !child.geometry.type.includes('Grid')) {
@@ -328,7 +339,6 @@
             });
             removeList.forEach(c => scene.remove(c));
 
-            // Merkezleme dönüşümü (Canvas koordinatlarını 3D dünya merkezine hizalama için offset)
             const offsetX = canvas2d.width / 2;
             const offsetZ = canvas2d.height / 2;
 
@@ -342,7 +352,7 @@
                 if (length === 0) return;
 
                 const angle = Math.atan2(z2 - z1, x2 - x1);
-                const wallHeight = 250; // Duvar yüksekliği (cm)
+                const wallHeight = 250;
                 const thickness = el.thickness || 20;
 
                 let color = 0xdddddd;
@@ -355,14 +365,12 @@
                 const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.5 });
                 const mesh = new THREE.Mesh(geometry, material);
 
-                // Konumlandırma
                 mesh.position.set((x1 + x2) / 2, wallHeight / 2, (z1 + z2) / 2);
                 mesh.rotation.y = -angle;
 
                 scene.add(mesh);
             });
 
-            // Boyut güncellemesi
             const container = document.getElementById('canvas3d-container');
             renderer.setSize(container.clientWidth, container.clientHeight);
             camera.aspect = container.clientWidth / container.clientHeight;
