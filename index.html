@@ -1,378 +1,371 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile2 Global - Efsun ve İtem Pazarı</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --bg-color: #0b0f19;
-            --card-bg: #131c2e;
-            --accent: #f59e0b; /* Metin2 Altın Sarısı */
-            --accent-hover: #d97706;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --border: #1e293b;
-            --danger: #ef4444;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); padding: 12px; }
-        .container { max-width: 650px; margin: 0 auto; }
-        
-        header { text-align: center; margin-bottom: 20px; padding: 15px; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
-        header h1 { font-size: 1.6rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
-        header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; }
-
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
-        h2 { font-size: 1.1rem; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; color: #fbbf24; display: flex; align-items: center; gap: 8px; }
-
-        label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 8px; margin-bottom: 3px; }
-        input, select, button { width: 100%; padding: 11px; background: #090d16; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 0.95rem; outline: none; transition: all 0.3s; }
-        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2); }
-        
-        .row { display: flex; gap: 10px; }
-        .row > div { flex: 1; }
-
-        button { background: var(--accent); color: #0b0f19; font-weight: bold; cursor: pointer; border: none; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-        button:hover { background: var(--accent-hover); }
-
-        .item-card { background: #090d16; border: 1px solid var(--border); padding: 14px; border-radius: 10px; margin-bottom: 12px; position: relative; border-left: 4px solid var(--accent); }
-        .item-card h3 { color: var(--accent); font-size: 1.15rem; display: flex; justify-content: space-between; align-items: center; }
-        .item-card p { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
-        
-        .badge-container { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
-        .badge { background: #1e293b; color: #e2e8f0; padding: 4px 8px; border-radius: 6px; font-size: 0.78rem; border: 1px solid #334155; }
-        
-        .user-panel { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; background: #090d16; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 10px; }
-        .delete-btn { background: var(--danger); color: white; width: auto; padding: 5px 12px; font-size: 0.75rem; margin: 0; border-radius: 6px; }
-        .hidden { display: none !important; }
-        
-        .price-tag { color: var(--success); font-weight: bold; font-size: 1rem; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Mobile2 Global Pazar: Metin2 item ve efsun ilanlarını ara, ilan ver, satıcıyla iletişime geç.">
+<meta name="theme-color" content="#0e1320">
+<title>Mobile2 Global Pazar</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#0e1320;--panel:#161d2f;--panel2:#1b2439;--line:#2a3550;--gold:#e0a63a;--gold2:#f3c565;--text:#eef0f6;--mute:#9aa4bd;--ok:#34c38f;--bad:#ef5b5b;--r:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(1200px 600px at 50% -200px,#1d2745,var(--bg));color:var(--text);font:15px/1.5 'Nunito Sans',system-ui,sans-serif;min-height:100vh;padding-bottom:90px}
+:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+.wrap{max-width:980px;margin:0 auto;padding:0 14px}
+.top{position:sticky;top:0;z-index:20;background:rgba(14,19,32,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;height:58px;gap:10px}
+.brand{font-family:Cinzel,Georgia,serif;font-weight:800;font-size:1.15rem;color:var(--gold2);letter-spacing:.5px}
+.brand small{display:block;font:600 .68rem 'Nunito Sans',sans-serif;color:var(--mute);letter-spacing:0}
+button,input,select{font:inherit;color:inherit}
+.btn{border:1px solid var(--line);background:var(--panel2);padding:9px 14px;border-radius:var(--r);cursor:pointer;font-weight:700;transition:.15s}
+.btn:hover{border-color:var(--gold)}
+.btn:disabled{opacity:.5;cursor:wait}
+.btn.gold{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a1204;border-color:var(--gold)}
+.btn.sm{padding:6px 10px;font-size:.8rem}
+.btn.bad{color:var(--bad)}
+.btn.ok{color:var(--ok)}
+.hero{padding:26px 0 8px}
+.hero h1{font-family:Cinzel,Georgia,serif;font-size:1.7rem;line-height:1.2}
+.hero p{color:var(--mute);margin-top:6px;max-width:55ch}
+.tabs{display:flex;gap:6px;margin:16px 0 12px}
+.tab{flex:0 0 auto;padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:transparent;cursor:pointer;font-weight:700;color:var(--mute)}
+.tab[aria-selected=true]{background:var(--panel2);color:var(--gold2);border-color:var(--gold)}
+.filters{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+.filters .full{grid-column:1/-1}
+input,select{width:100%;padding:10px 12px;background:#0f1525;border:1px solid var(--line);border-radius:var(--r)}
+input:focus,select:focus{border-color:var(--gold);outline:none}
+label{display:block;font-size:.78rem;color:var(--mute);margin:10px 0 4px}
+.filters label{margin:0 0 3px}
+.meta{display:flex;justify-content:space-between;align-items:center;color:var(--mute);font-size:.85rem;margin:14px 2px 8px}
+.grid{display:grid;gap:12px;grid-template-columns:1fr}
+.card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.card.sold{opacity:.6;border-left-color:var(--mute)}
+.card.exp{border-left-color:var(--bad)}
+.card h3{font-size:1.05rem;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.price{color:var(--ok);font-weight:800;white-space:nowrap}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:3px 8px;font-size:.8rem}
+.tag.plus{color:#1a1204;background:var(--gold2);border-color:var(--gold);font-weight:800}
+.tag.st{color:var(--bad);border-color:var(--bad);background:transparent}
+.seller{font-size:.85rem;color:var(--mute)}
+.seller b{color:var(--text)}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:8px;font-size:.78rem;color:var(--mute)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.empty{text-align:center;color:var(--mute);padding:40px 10px;border:1px dashed var(--line);border-radius:14px}
+.skel{height:130px;border-radius:14px;background:linear-gradient(90deg,var(--panel),var(--panel2),var(--panel));background-size:200% 100%;animation:sk 1.2s infinite}
+@keyframes sk{to{background-position:-200% 0}}
+.fab{position:fixed;right:16px;bottom:16px;z-index:15;box-shadow:0 8px 24px rgba(0,0,0,.5);padding:13px 20px;border-radius:999px}
+dialog{margin:auto;width:min(480px,94vw);max-height:92vh;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:18px}
+dialog::backdrop{background:rgba(5,8,16,.75)}
+dialog h2{font-family:Cinzel,Georgia,serif;font-size:1.2rem;color:var(--gold2);margin-bottom:6px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ef{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:6px}
+.modes{display:flex;gap:6px;margin:8px 0}
+.hint{font-size:.78rem;color:var(--mute);margin-top:6px}
+.err{color:var(--bad);font-size:.85rem;margin-top:8px;min-height:1.2em}
+.hide{display:none!important}
+#toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:50;background:var(--panel2);border:1px solid var(--gold);padding:10px 16px;border-radius:999px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;max-width:92vw;text-align:center}
+#toast.on{opacity:1}
+footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
+@media(min-width:720px){.grid{grid-template-columns:1fr 1fr}.filters{grid-template-columns:2fr 2fr 1fr 1fr 1fr}.filters .full{grid-column:auto}.hero h1{font-size:2.2rem}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
+<header class="top"><div class="wrap">
+  <div class="brand">⚔️ Mobile2 Pazar<small>Item ve efsun ilanları</small></div>
+  <div id="authBar"></div>
+</div></header>
 
-<div class="container">
-    <header>
-        <h1>⚔️ Mobile2 Global Pazar</h1>
-        <p>Güvenli Efsun & İtem Arama ve Pazar Sistemi</p>
-    </header>
+<main class="wrap">
+  <section class="hero">
+    <h1>Aradığın efsunlu itemi bul.</h1>
+    <p>İtem adına, efsuna, artıya ve fiyata göre ara. İlan vermek ücretsiz, ilanlar 14 gün yayında kalır.</p>
+  </section>
 
-    <!-- HESAP / GİRİŞ ALANI -->
-    <div class="card">
-        <h2>👤 Hesap Yönetimi</h2>
-        <div id="loggedOutView">
-            <input type="email" id="email" placeholder="E-posta Adresi">
-            <input type="password" id="password" placeholder="Şifre">
-            <div class="row">
-                <button onclick="signUp()" style="background: #3b82f6; color: white;">Kayıt Ol</button>
-                <button onclick="signIn()">Giriş Yap</button>
-            </div>
-        </div>
-        <div id="loggedInView" class="hidden">
-            <div class="user-panel">
-                <span id="userEmailDisplay" style="color: var(--success); font-weight: 500;"></span>
-                <button onclick="signOut()" class="delete-btn">Çıkış Yap</button>
-            </div>
-        </div>
-        <p id="authMsg" style="font-size: 0.8rem; margin-top: 8px; color: var(--accent); text-align: center;"></p>
-    </div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tabMarket" aria-selected="true">Pazar</button>
+    <button class="tab hide" role="tab" id="tabMine" aria-selected="false">İlanlarım</button>
+  </div>
 
-    <!-- İTEM ARAMA VE FİLTRELEME -->
-    <div class="card">
-        <h2>🔍 Gelişmiş Arama</h2>
-        <div class="row">
-            <div>
-                <label>İtem Adı</label>
-                <input type="text" id="searchItemName" placeholder="Örn: Zehir Kılıcı" onkeyup="loadItems()">
-            </div>
-            <div>
-                <label>Aranan Efsun</label>
-                <input type="text" id="searchEfsun" placeholder="Örn: Kılıç Savunması" onkeyup="loadItems()">
-            </div>
-        </div>
-    </div>
+  <div class="filters">
+    <div class="full"><label for="fName">İtem adı</label><input id="fName" placeholder="Örn: Zehir Kılıcı" autocomplete="off"></div>
+    <div class="full"><label for="fEfsun">Efsun</label><input id="fEfsun" placeholder="Örn: Kılıç Savunması" autocomplete="off"></div>
+    <div><label for="fCat">Kategori</label><select id="fCat"></select></div>
+    <div><label for="fPlus">Artı</label><select id="fPlus"><option value="">Hepsi</option></select></div>
+    <div><label for="fSort">Sırala</label><select id="fSort"><option value="new">En yeni</option><option value="low">Fiyat artan</option><option value="high">Fiyat azalan</option></select></div>
+    <div><label for="fCur">Para birimi</label><select id="fCur"><option value="">Hepsi</option></select></div>
+  </div>
 
-    <!-- İLAN EKLEME FORMU (Giriş Yapınca Görünür) -->
-    <div class="card hidden" id="addItemCard">
-        <h2>➕ Yeni İlan Ekle</h2>
-        
-        <div class="row">
-            <div>
-                <label>İtem Seçin veya Yazın</label>
-                <select id="itemCategorySelect" onchange="document.getElementById('itemName').value = this.value">
-                    <option value="">-- Hazır İtem Seç --</option>
-                    <option value="Zehir Kılıcı">Zehir Kılıcı</option>
-                    <option value="Muharebe Kılıcı">Muharebe Kılıcı</option>
-                    <option value="Siyah Çelik Zırh">Siyah Çelik Zırh</option>
-                    <option value="Şahin Kalkan">Şahin Kalkan</option>
-                    <option value="Anka Ayakkabı">Anka Ayakkabı</option>
-                    <option value="Cennetin Gözü Kolye">Cennetin Gözü Kolye</option>
-                    <option value="Cennetin Gözü Küpe">Cennetin Gözü Küpe</option>
-                    <option value="Bilezik">Bilezik</option>
-                </select>
-            </div>
-            <div>
-                <label>İtem Artısı (+)</label>
-                <select id="itemPlus">
-                    <option value="+9">+9</option>
-                    <option value="+8">+8</option>
-                    <option value="+7">+7</option>
-                    <option value="+6">+6</option>
-                    <option value="+0">+0</option>
-                </select>
-            </div>
-        </div>
+  <div class="meta"><span id="count"></span><button class="btn sm" id="resetBtn">Filtreleri temizle</button></div>
+  <div id="list" class="grid"></div>
+  <div style="text-align:center;margin-top:14px"><button class="btn hide" id="moreBtn">Daha fazla göster</button></div>
+  <footer>Oyun içi alışverişte dikkatli ol: kimseye şifreni verme, ödemeyi item teslimatıyla birlikte yap.</footer>
+</main>
 
-        <label>İtem Tam Adı (Düzenleyebilirsin)</label>
-        <input type="text" id="itemName" placeholder="Örn: Zehir Kılıcı">
+<button class="btn gold fab" id="newBtn">+ İlan ver</button>
+<div id="toast" role="status" aria-live="polite"></div>
 
-        <!-- EFSUN SEÇİM KUTULARI -->
-        <label>1. Efsun</label>
-        <div class="row">
-            <select id="efsun1_adi" style="flex: 2;">
-                <option value="">Efsun Seçiniz</option>
-                <option value="Yarı İnsanlara Karşı Güçlü">Yarı İnsanlara Karşı Güçlü</option>
-                <option value="Kılıç Savunması">Kılıç Savunması</option>
-                <option value="Çift El Savunması">Çift El Savunması</option>
-                <option value="Bıçak Savunması">Bıçak Savunması</option>
-                <option value="Oka Karşı Dayanıklılık">Oka Karşı Dayanıklılık</option>
-                <option value="Büyü Hızı">Büyü Hızı</option>
-                <option value="Delici Vuruş Şansı">Delici Vuruş Şansı</option>
-                <option value="Kritik Vuruş Şansı">Kritik Vuruş Şansı</option>
-                <option value="Max HP">Max HP</option>
-                <option value="Güç / Çeviklik / Zeka">Güç / Çeviklik / Zeka</option>
-            </select>
-            <input type="text" id="efsun1_deger" placeholder="Oran (Örn: 10)" style="flex: 1;">
-        </div>
+<!-- Giriş / kayıt -->
+<dialog id="authDlg">
+  <h2 id="authTitle">Giriş yap</h2>
+  <div class="modes" id="authModes">
+    <button class="tab" data-mode="in" aria-selected="true">Giriş</button>
+    <button class="tab" data-mode="up" aria-selected="false">Kayıt ol</button>
+  </div>
+  <div id="emailRow"><label for="email">E-posta</label><input id="email" type="email" autocomplete="email"></div>
+  <div><label for="pass" id="passLbl">Şifre</label><input id="pass" type="password" autocomplete="current-password" minlength="6"></div>
+  <p class="hint">Şifre en az 6 karakter olmalı.</p>
+  <p class="err" id="authErr"></p>
+  <div class="two" style="margin-top:10px">
+    <button class="btn" id="authClose">Vazgeç</button>
+    <button class="btn gold" id="authGo">Giriş yap</button>
+  </div>
+  <button class="btn sm" id="forgot" style="margin-top:10px;border:none;background:none;color:var(--mute)">Şifremi unuttum</button>
+</dialog>
 
-        <label>2. Efsun</label>
-        <div class="row">
-            <select id="efsun2_adi" style="flex: 2;">
-                <option value="">Efsun Seçiniz</option>
-                <option value="Yarı İnsanlara Karşı Güçlü">Yarı İnsanlara Karşı Güçlü</option>
-                <option value="Kılıç Savunması">Kılıç Savunması</option>
-                <option value="Çift El Savunması">Çift El Savunması</option>
-                <option value="Bıçak Savunması">Bıçak Savunması</option>
-                <option value="Oka Karşı Dayanıklılık">Oka Karşı Dayanıklılık</option>
-                <option value="Büyü Hızı">Büyü Hızı</option>
-                <option value="Delici Vuruş Şansı">Delici Vuruş Şansı</option>
-                <option value="Kritik Vuruş Şansı">Kritik Vuruş Şansı</option>
-                <option value="Max HP">Max HP</option>
-                <option value="Güç / Çeviklik / Zeka">Güç / Çeviklik / Zeka</option>
-            </select>
-            <input type="text" id="efsun2_deger" placeholder="Oran (Örn: 15)" style="flex: 1;">
-        </div>
-
-        <label>3. Efsun (İsteğe Bağlı)</label>
-        <div class="row">
-            <select id="efsun3_adi" style="flex: 2;">
-                <option value="">Efsun Seçiniz</option>
-                <option value="Yarı İnsanlara Karşı Güçlü">Yarı İnsanlara Karşı Güçlü</option>
-                <option value="Kılıç Savunması">Kılıç Savunması</option>
-                <option value="Çift El Savunması">Çift El Savunması</option>
-                <option value="Bıçak Savunması">Bıçak Savunması</option>
-                <option value="Kritik Vuruş Şansı">Kritik Vuruş Şansı</option>
-                <option value="Max HP">Max HP</option>
-            </select>
-            <input type="text" id="efsun3_deger" placeholder="Oran" style="flex: 1;">
-        </div>
-
-        <div class="row">
-            <div>
-                <label>Fiyat</label>
-                <input type="text" id="itemPrice" placeholder="Örn: 30 Won / 3 T">
-            </div>
-            <div>
-                <label>Karakter Adı (Nick)</label>
-                <input type="text" id="sellerName" placeholder="Oyun içi nick">
-            </div>
-        </div>
-
-        <label>İletişim Bilgisi (Discord / Not)</label>
-        <input type="text" id="contactInfo" placeholder="Örn: Discord: isim#0000 veya Mavi Bayrak">
-
-        <button onclick="addItem()" style="background: var(--success); color: white; margin-top: 15px;">İlanı Yayınla</button>
-    </div>
-
-    <!-- İLANLARIN LİSTELENDİĞİ ALAN -->
-    <div class="card">
-        <h2>📜 Aktif Pazar İlanları</h2>
-        <div id="itemList">
-            <p style="text-align: center; color: var(--text-muted);">İlanlar yükleniyor...</p>
-        </div>
-    </div>
-</div>
+<!-- İlan formu -->
+<dialog id="postDlg">
+  <h2>Yeni ilan</h2>
+  <div class="two">
+    <div><label for="pCat">Kategori</label><select id="pCat"></select></div>
+    <div><label for="pPlus">Artı</label><select id="pPlus"></select></div>
+  </div>
+  <label for="pName">İtem adı</label>
+  <input id="pName" list="itemNames" maxlength="60" placeholder="Örn: Zehir Kılıcı" autocomplete="off">
+  <datalist id="itemNames"></datalist>
+  <label>Efsunlar (en fazla 5)</label>
+  <div id="efRows"></div>
+  <div class="two">
+    <div><label for="pPrice">Fiyat</label><input id="pPrice" type="number" min="0" step="any" inputmode="decimal" placeholder="30"></div>
+    <div><label for="pCur">Para birimi</label><select id="pCur"></select></div>
+  </div>
+  <div class="two">
+    <div><label for="pNick">Karakter adı</label><input id="pNick" maxlength="30" placeholder="Oyun içi nick"></div>
+    <div><label for="pContact">İletişim</label><input id="pContact" maxlength="80" placeholder="Discord / not"></div>
+  </div>
+  <p class="err" id="postErr"></p>
+  <div class="two" style="margin-top:10px">
+    <button class="btn" id="postClose">Vazgeç</button>
+    <button class="btn gold" id="postGo">Yayınla</button>
+  </div>
+</dialog>
 
 <script>
-    // --- SUPABASE BAĞLANTI BİLGİLERİNİZ ---
-    const SUPABASE_URL = 'https://bgugtvlixerwlhrgqmfw.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_V11Gt6rJmKP90QQ4G7L-ag_1NpCea-i';
-    
-    const { createClient } = supabase;
-    const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_URL='https://bgugtvlixerwlhrgqmfw.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_V11Gt6rJmKP90QQ4G7L-ag_1NpCea-i';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
-    let currentUser = null;
+const PAGE=12, DAYS=14;
+const CATS=['Silah','Zırh','Kask','Kalkan','Ayakkabı','Bilezik','Kolye','Küpe','Diğer'];
+const CURS=['Won','Yang','TL'];
+const PLUS=['+9','+8','+7','+6','+5','+4','+3','+2','+1','+0'];
+const EFSUN=['Yarı İnsanlara Karşı Güçlü','Canavarlara Karşı Güçlü','Savaşçılara Karşı Güçlü','Ninjalara Karşı Güçlü','Surilere Karşı Güçlü','Şamanlara Karşı Güçlü','Kılıç Savunması','Çift El Savunması','Bıçak Savunması','Çan Savunması','Yelpaze Savunması','Oka Karşı Dayanıklılık','Büyü Savunması','Büyü Hızı','Delici Vuruş Şansı','Kritik Vuruş Şansı','Saldırı Hızı','Hareket Hızı','Saldırı Değeri','Max HP','Max SP','Güç','Çeviklik','Zeka','Canlılık'];
+const NAMES=['Zehir Kılıcı','Muharebe Kılıcı','Siyah Çelik Zırh','Şahin Kalkan','Anka Ayakkabı','Cennetin Gözü Kolye','Cennetin Gözü Küpe','Bilezik'];
 
-    window.addEventListener('DOMContentLoaded', async () => {
-        const { data: { session } } = await _supabase.auth.getSession();
-        updateAuthUI(session);
-        loadItems();
-    });
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const opts=(arr,first)=>(first?`<option value="">${first}</option>`:'')+arr.map(v=>`<option>${esc(v)}</option>`).join('');
+const clean=s=>s.trim().replace(/[%*,()\\]/g,' ').replace(/\s+/g,' ');
 
-    async function signUp() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const { data, error } = await _supabase.auth.signUp({ email, password });
-        if (error) document.getElementById('authMsg').innerText = "Kayıt Hatası: " + error.message;
-        else document.getElementById('authMsg').innerText = "Kayıt başarılı! Şimdi giriş yapabilirsiniz.";
-    }
+let user=null, view='market', page=0, total=0, timer, toastT, authMode='in', recovery=false;
 
-    async function signIn() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-            document.getElementById('authMsg').innerText = "Giriş Hatası: " + error.message;
-        } else {
-            updateAuthUI(data.session);
-            document.getElementById('authMsg').innerText = "Giriş başarılı!";
-        }
-    }
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600)}
 
-    async function signOut() {
-        await _supabase.auth.signOut();
-        updateAuthUI(null);
-    }
+/* ---------- Kurulum ---------- */
+$('#fCat').innerHTML=opts(CATS,'Hepsi');
+$('#pCat').innerHTML=opts(CATS);
+$('#fPlus').innerHTML=opts(PLUS,'Hepsi');
+$('#pPlus').innerHTML=opts(PLUS);
+$('#fCur').innerHTML=opts(CURS,'Hepsi');
+$('#pCur').innerHTML=opts(CURS);
+$('#itemNames').innerHTML=NAMES.map(n=>`<option value="${esc(n)}">`).join('');
+$('#efRows').innerHTML=[1,2,3,4,5].map(i=>`<div class="ef"><select id="ef${i}n" aria-label="Efsun ${i}">${opts(EFSUN,'Efsun '+i+(i>2?' (isteğe bağlı)':''))}</select><input id="ef${i}v" type="number" min="0" step="any" inputmode="decimal" placeholder="Değer" aria-label="Efsun ${i} değeri"></div>`).join('');
 
-    function updateAuthUI(session) {
-        currentUser = session ? session.user : null;
-        if (currentUser) {
-            document.getElementById('loggedOutView').classList.add('hidden');
-            document.getElementById('loggedInView').classList.remove('hidden');
-            document.getElementById('addItemCard').classList.remove('hidden');
-            document.getElementById('userEmailDisplay').innerText = currentUser.email;
-        } else {
-            document.getElementById('loggedOutView').classList.remove('hidden');
-            document.getElementById('loggedInView').classList.add('hidden');
-            document.getElementById('addItemCard').classList.add('hidden');
-        }
-        loadItems();
-    }
+/* ---------- Oturum ---------- */
+function renderAuth(){
+  $('#authBar').innerHTML=user
+    ?`<span class="seller" style="margin-right:8px">${esc(user.email)}</span><button class="btn sm" id="outBtn">Çıkış</button>`
+    :`<button class="btn sm gold" id="inBtn">Giriş / Kayıt</button>`;
+  $('#tabMine').classList.toggle('hide',!user);
+  if(!user&&view==='mine'){setView('market');return}
+}
+function setUser(u){user=u;renderAuth();load(true)}
+sb.auth.getSession().then(({data})=>setUser(data.session?.user||null));
+sb.auth.onAuthStateChange((ev,s)=>{
+  if(ev==='PASSWORD_RECOVERY'){recovery=true;openAuth('recover')}
+  if(ev==='SIGNED_IN'||ev==='SIGNED_OUT'){ if((s?.user?.id||null)!==(user?.id||null)) setUser(s?.user||null) }
+});
 
-    async function addItem() {
-        if (!currentUser) return alert("Önce giriş yapmalısınız!");
+function openAuth(mode){
+  authMode=mode;$('#authErr').textContent='';
+  const rec=mode==='recover';
+  $('#authModes').classList.toggle('hide',rec);
+  $('#emailRow').classList.toggle('hide',rec);
+  $('#forgot').classList.toggle('hide',rec);
+  document.querySelectorAll('#authModes .tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.mode===mode));
+  $('#authTitle').textContent=rec?'Yeni şifre belirle':mode==='in'?'Giriş yap':'Kayıt ol';
+  $('#passLbl').textContent=rec?'Yeni şifre':'Şifre';
+  $('#authGo').textContent=rec?'Şifreyi kaydet':mode==='in'?'Giriş yap':'Kayıt ol';
+  if(!$('#authDlg').open)$('#authDlg').showModal();
+}
+async function authSubmit(){
+  const email=$('#email').value.trim(),password=$('#pass').value,err=$('#authErr'),btn=$('#authGo');
+  err.textContent='';
+  if(authMode!=='recover'&&!/^\S+@\S+\.\S+$/.test(email)){err.textContent='Geçerli bir e-posta gir.';return}
+  if(password.length<6){err.textContent='Şifre en az 6 karakter olmalı.';return}
+  btn.disabled=true;
+  let r;
+  if(authMode==='recover'){r=await sb.auth.updateUser({password});if(!r.error){recovery=false;toast('Şifren güncellendi.');$('#authDlg').close()}}
+  else if(authMode==='up'){
+    r=await sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});
+    if(!r.error){ if(r.data.session){toast('Kayıt tamamlandı, hoş geldin!')}else{toast('Kayıt alındı. E-postandaki bağlantıyla hesabını doğrula.')} $('#authDlg').close()}
+  }else{
+    r=await sb.auth.signInWithPassword({email,password});
+    if(!r.error){toast('Giriş yapıldı.');$('#authDlg').close()}
+  }
+  btn.disabled=false;
+  if(r.error)err.textContent=trErr(r.error.message);
+}
+function trErr(m){
+  if(/Invalid login/i.test(m))return 'E-posta veya şifre hatalı.';
+  if(/already registered/i.test(m))return 'Bu e-posta zaten kayıtlı. Giriş yapmayı dene.';
+  if(/Email not confirmed/i.test(m))return 'E-postanı doğrulaman gerekiyor. Gelen kutunu kontrol et.';
+  if(/rate limit|too many/i.test(m))return 'Çok fazla deneme yapıldı. Biraz bekleyip tekrar dene.';
+  if(/password/i.test(m))return 'Şifre geçersiz: en az 6 karakter kullan.';
+  return 'Bir hata oluştu: '+m;
+}
+async function forgot(){
+  const email=$('#email').value.trim();
+  if(!/^\S+@\S+\.\S+$/.test(email)){$('#authErr').textContent='Önce e-posta adresini yaz.';return}
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  if(error)$('#authErr').textContent=trErr(error.message);
+  else{toast('Sıfırlama bağlantısı e-postana gönderildi.');$('#authDlg').close()}
+}
 
-        let baseName = document.getElementById('itemName').value;
-        let plus = document.getElementById('itemPlus').value;
-        if (!baseName) return alert("Lütfen item adı seçin veya yazın!");
+/* ---------- İlanları yükle ---------- */
+function setView(v){
+  view=v;
+  $('#tabMarket').setAttribute('aria-selected',v==='market');
+  $('#tabMine').setAttribute('aria-selected',v==='mine');
+  load(true);
+}
+async function load(reset){
+  if(reset){page=0;$('#list').innerHTML='<div class="skel"></div><div class="skel"></div>';$('#moreBtn').classList.add('hide')}
+  const now=new Date().toISOString();
+  let q=sb.from('items').select('*',{count:'exact'});
+  if(view==='mine'){ if(!user){return} q=q.eq('user_id',user.id) }
+  else q=q.eq('status','active').gt('expires_at',now);
 
-        let item_name = `${baseName} ${plus}`;
-        let category = "Genel";
-        
-        let e1_adi = document.getElementById('efsun1_adi').value;
-        let e1_val = document.getElementById('efsun1_deger').value;
-        let efsun_1 = e1_adi ? `${e1_adi} +${e1_val}` : null;
+  const name=clean($('#fName').value),ef=clean($('#fEfsun').value);
+  if(name)q=q.ilike('item_name',`%${name}%`);
+  if(ef)q=q.or(['efsun_1','efsun_2','efsun_3','efsun_4','efsun_5'].map(c=>`${c}.ilike.%${ef}%`).join(','));
+  if($('#fCat').value)q=q.eq('category',$('#fCat').value);
+  if($('#fPlus').value)q=q.ilike('item_name',`%${$('#fPlus').value}`);
+  if($('#fCur').value)q=q.eq('currency',$('#fCur').value);
+  const s=$('#fSort').value;
+  if(s==='low')q=q.order('price_value',{ascending:true,nullsFirst:false});
+  else if(s==='high')q=q.order('price_value',{ascending:false,nullsFirst:false});
+  q=q.order('created_at',{ascending:false}).range(page*PAGE,page*PAGE+PAGE-1);
 
-        let e2_adi = document.getElementById('efsun2_adi').value;
-        let e2_val = document.getElementById('efsun2_deger').value;
-        let efsun_2 = e2_adi ? `${e2_adi} +${e2_val}` : null;
+  const {data,count,error}=await q;
+  if(error){$('#list').innerHTML=`<div class="empty">İlanlar yüklenemedi. Bağlantını kontrol edip tekrar dene.<br><small>${esc(error.message)}</small></div>`;return}
+  total=count||0;
+  if(reset)$('#list').innerHTML='';
+  if(!data.length&&reset){
+    $('#list').innerHTML=`<div class="empty" style="grid-column:1/-1">${view==='mine'?'Henüz ilanın yok. "İlan ver" ile ilk ilanını ekle.':'Bu kriterlere uygun ilan bulunamadı. Filtreleri gevşetmeyi dene.'}</div>`;
+  }else $('#list').insertAdjacentHTML('beforeend',data.map(card).join(''));
+  const shown=$('#list').querySelectorAll('.card').length;
+  $('#count').textContent=total?`${total} ilan`:'';
+  $('#moreBtn').classList.toggle('hide',shown>=total);
+}
+function card(i){
+  const efs=[1,2,3,4,5].map(n=>i['efsun_'+n]).filter(Boolean).map(e=>`<span class="tag">${esc(e)}</span>`).join('');
+  const expired=new Date(i.expires_at)<new Date(), sold=i.status==='sold';
+  const plus=(i.item_name.match(/\+\d+$/)||[''])[0], base=plus?i.item_name.slice(0,-plus.length).trim():i.item_name;
+  const price=i.price_value!=null?`${Number(i.price_value)} ${esc(i.currency||'')}`:esc(i.price||'');
+  const mine=user&&user.id===i.user_id;
+  const status=sold?'<span class="tag st">Satıldı</span>':expired?'<span class="tag st">Süresi doldu</span>':'';
+  const left=Math.max(0,Math.ceil((new Date(i.expires_at)-Date.now())/864e5));
+  const acts=mine
+    ?`${!sold&&!expired?`<button class="btn sm ok" data-act="sold" data-id="${i.id}">Satıldı</button>`:''}<button class="btn sm" data-act="renew" data-id="${i.id}">Yenile</button><button class="btn sm bad" data-act="del" data-id="${i.id}">Sil</button>`
+    :`<button class="btn sm gold" data-act="copy" data-nick="${esc(i.seller_name)}">/w kopyala</button>`;
+  return `<article class="card ${sold?'sold':''} ${expired?'exp':''}">
+    <h3><span>${esc(base)}</span><span class="price">${price}</span></h3>
+    <div class="tags">${plus?`<span class="tag plus">${esc(plus)}</span>`:''}${i.category?`<span class="tag">${esc(i.category)}</span>`:''}${status}</div>
+    ${efs?`<div class="tags">${efs}</div>`:''}
+    <div class="seller"><b>${esc(i.seller_name)}</b>${i.contact_info?' · '+esc(i.contact_info):''}</div>
+    <div class="foot"><span>${new Date(i.created_at).toLocaleDateString('tr-TR')}${!sold&&!expired?` · ${left} gün kaldı`:''}</span><div class="acts">${acts}</div></div>
+  </article>`;
+}
 
-        let e3_adi = document.getElementById('efsun3_adi').value;
-        let e3_val = document.getElementById('efsun3_deger').value;
-        let efsun_3 = e3_adi ? `${e3_adi} +${e3_val}` : null;
+/* ---------- İlan ver ---------- */
+function openPost(){
+  if(!user){toast('İlan vermek için önce giriş yap.');openAuth('in');return}
+  $('#postErr').textContent='';$('#postDlg').showModal();
+}
+async function postSubmit(){
+  const err=$('#postErr'),btn=$('#postGo');err.textContent='';
+  const base=$('#pName').value.trim(),nick=$('#pNick').value.trim(),price=parseFloat($('#pPrice').value);
+  if(base.length<2){err.textContent='İtem adını yaz.';return}
+  if(!(price>0)){err.textContent='Geçerli bir fiyat gir.';return}
+  if(nick.length<2){err.textContent='Karakter adını yaz.';return}
+  const row={user_id:user.id,item_name:`${base} ${$('#pPlus').value}`,category:$('#pCat').value,
+    price_value:price,currency:$('#pCur').value,price:`${price} ${$('#pCur').value}`,
+    seller_name:nick,contact_info:$('#pContact').value.trim()||null,status:'active'};
+  const seen=new Set();
+  for(let n=1;n<=5;n++){
+    const nm=$(`#ef${n}n`).value,v=$(`#ef${n}v`).value.trim();
+    if(!nm){row['efsun_'+n]=null;continue}
+    if(seen.has(nm)){err.textContent='Aynı efsunu iki kez seçtin.';return}
+    if(v===''||isNaN(v)){err.textContent=`Efsun ${n} için sayısal değer gir.`;return}
+    seen.add(nm);row['efsun_'+n]=`${nm} +${v}`;
+  }
+  btn.disabled=true;
+  const {error}=await sb.from('items').insert([row]);
+  btn.disabled=false;
+  if(error){err.textContent='İlan eklenemedi: '+error.message;return}
+  $('#postDlg').close();toast('İlan yayınlandı!');
+  ['#pName','#pPrice','#pContact'].forEach(s=>$(s).value='');
+  for(let n=1;n<=5;n++){$(`#ef${n}n`).value='';$(`#ef${n}v`).value=''}
+  view==='mine'?load(true):setView('mine');
+}
 
-        let price = document.getElementById('itemPrice').value;
-        let seller_name = document.getElementById('sellerName').value;
-        let contact_info = document.getElementById('contactInfo').value;
-
-        if (!price || !seller_name) {
-            alert("Lütfen Fiyat ve Karakter Adı alanlarını doldurun!");
-            return;
-        }
-
-        const { error } = await _supabase.from('items').insert([{
-            user_id: currentUser.id,
-            item_name, category, efsun_1, efsun_2, efsun_3, price, seller_name, contact_info
-        }]);
-
-        if (error) {
-            alert("İlan eklenirken hata: " + error.message);
-        } else {
-            alert("İlan başarıyla yayınlandı!");
-            document.getElementById('itemName').value = '';
-            document.getElementById('efsun1_deger').value = '';
-            document.getElementById('efsun2_deger').value = '';
-            document.getElementById('efsun3_deger').value = '';
-            document.getElementById('itemPrice').value = '';
-            loadItems();
-        }
-    }
-
-    async function loadItems() {
-        const searchName = document.getElementById('searchItemName').value.toLowerCase();
-        const searchEfsun = document.getElementById('searchEfsun').value.toLowerCase();
-
-        const { data: items, error } = await _supabase.from('items').select('*').order('created_at', { ascending: false });
-        const listDiv = document.getElementById('itemList');
-
-        if (error) {
-            listDiv.innerHTML = '<p style="color:var(--danger);">İlanlar yüklenirken hata oluştu.</p>';
-            return;
-        }
-
-        if (!items || items.length === 0) {
-            listDiv.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Henüz hiç ilan eklenmemiş.</p>';
-            return;
-        }
-
-        let filtered = items.filter(item => {
-            const matchesName = item.item_name.toLowerCase().includes(searchName);
-            const efsunlarText = `${item.efsun_1 || ''} ${item.efsun_2 || ''} ${item.efsun_3 || ''}`.toLowerCase();
-            const matchesEfsun = efsunlarText.includes(searchEfsun);
-            return matchesName && matchesEfsun;
-        });
-
-        if (filtered.length === 0) {
-            listDiv.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Aradığınız kriterlere uygun item bulunamadı.</p>';
-            return;
-        }
-
-        listDiv.innerHTML = '';
-        filtered.forEach(item => {
-            let efsunlarHTML = '';
-            [item.efsun_1, item.efsun_2, item.efsun_3].forEach(e => {
-                if(e) efsunlarHTML += `<span class="badge">${e}</span>`;
-            });
-
-            let deleteBtnHTML = '';
-            if (currentUser && currentUser.id === item.user_id) {
-                deleteBtnHTML = `<button class="delete-btn" onclick="deleteItem(${item.id})">İlanı Sil</button>`;
-            }
-
-            listDiv.innerHTML += `
-                <div class="item-card">
-                    <h3>${item.item_name} <span class="price-tag">${item.price}</span></h3>
-                    <div class="badge-container">${efsunlarHTML}</div>
-                    <p><b>Satıcı:</b> ${item.seller_name} | <b>İletişim:</b> ${item.contact_info || 'Belirtilmemiş'}</p>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid #1e293b; padding-top: 6px;">
-                        <span style="font-size: 0.75rem; color: var(--text-muted);">${new Date(item.created_at).toLocaleDateString()}</span>
-                        ${deleteBtnHTML}
-                    </div>
-                </div>
-            `;
-        });
-    }
-
-    async function deleteItem(id) {
-        if(!confirm("Bu ilanı silmek istediğinize emin misiniz?")) return;
-        const { error } = await _supabase.from('items').delete().eq('id', id);
-        if(error) alert("Silme hatası: " + error.message);
-        else loadItems();
-    }
+/* ---------- Olaylar ---------- */
+$('#list').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-act]');if(!b)return;
+  const act=b.dataset.act,id=b.dataset.id;
+  if(act==='copy'){
+    try{await navigator.clipboard.writeText('/w '+b.dataset.nick);toast('Kopyalandı: /w '+b.dataset.nick)}
+    catch{toast('Satıcı: '+b.dataset.nick)}
+    return;
+  }
+  if(act==='del'){ if(!confirm('Bu ilanı silmek istediğine emin misin?'))return;
+    const {error}=await sb.from('items').delete().eq('id',id).eq('user_id',user.id);
+    return error?toast('Silinemedi: '+error.message):(toast('İlan silindi.'),load(true)) }
+  const patch=act==='sold'?{status:'sold'}:{status:'active',expires_at:new Date(Date.now()+DAYS*864e5).toISOString()};
+  const {error}=await sb.from('items').update(patch).eq('id',id).eq('user_id',user.id);
+  error?toast('Güncellenemedi: '+error.message):(toast(act==='sold'?'Satıldı olarak işaretlendi.':'İlan 14 gün uzatıldı.'),load(true));
+});
+$('#authBar').addEventListener('click',async e=>{
+  if(e.target.id==='inBtn')openAuth('in');
+  if(e.target.id==='outBtn'){await sb.auth.signOut();setUser(null);toast('Çıkış yapıldı.')}
+});
+document.querySelectorAll('#authModes .tab').forEach(b=>b.onclick=()=>openAuth(b.dataset.mode));
+$('#authGo').onclick=authSubmit;$('#forgot').onclick=forgot;
+$('#authClose').onclick=()=>$('#authDlg').close();
+$('#pass').addEventListener('keydown',e=>{if(e.key==='Enter')authSubmit()});
+$('#newBtn').onclick=openPost;$('#postGo').onclick=postSubmit;$('#postClose').onclick=()=>$('#postDlg').close();
+$('#tabMarket').onclick=()=>setView('market');$('#tabMine').onclick=()=>setView('mine');
+$('#moreBtn').onclick=()=>{page++;load(false)};
+['fName','fEfsun'].forEach(id=>$('#'+id).addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>load(true),350)}));
+['fCat','fPlus','fSort','fCur'].forEach(id=>$('#'+id).addEventListener('change',()=>load(true)));
+$('#resetBtn').onclick=()=>{['fName','fEfsun','fCat','fPlus','fCur'].forEach(id=>$('#'+id).value='');$('#fSort').value='new';load(true)};
 </script>
-
 </body>
 </html>
