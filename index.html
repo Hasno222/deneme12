@@ -4,100 +4,203 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mobile2 Global - Efsun ve İtem Pazarı</title>
-    <!-- Supabase JS Kütüphanesi -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent: #38bdf8;
-            --accent-hover: #0ea5e9;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --danger: #f43f5e;
+            --bg-color: #0b0f19;
+            --card-bg: #131c2e;
+            --accent: #f59e0b; /* Metin2 Altın Sarısı */
+            --accent-hover: #d97706;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #1e293b;
+            --danger: #ef4444;
+            --success: #10b981;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); padding: 15px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 20px; }
-        header h1 { font-size: 1.5rem; color: var(--accent); }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 15px; }
-        h2 { font-size: 1.2rem; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
-        input, select, button { width: 100%; padding: 10px; margin-top: 8px; margin-bottom: 10px; background: #0f172a; border: 1px solid var(--border); color: white; border-radius: 6px; font-size: 0.95rem; }
-        button { background: var(--accent); color: #0f172a; font-weight: bold; cursor: pointer; border: none; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 12px; }
+        .container { max-width: 650px; margin: 0 auto; }
+        
+        header { text-align: center; margin-bottom: 20px; padding: 15px; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+        header h1 { font-size: 1.6rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+        header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
+        h2 { font-size: 1.1rem; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; color: #fbbf24; display: flex; align-items: center; gap: 8px; }
+
+        label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 8px; margin-bottom: 3px; }
+        input, select, button { width: 100%; padding: 11px; background: #090d16; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 0.95rem; outline: none; transition: all 0.3s; }
+        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2); }
+        
+        .row { display: flex; gap: 10px; }
+        .row > div { flex: 1; }
+
+        button { background: var(--accent); color: #0b0f19; font-weight: bold; cursor: pointer; border: none; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
         button:hover { background: var(--accent-hover); }
-        .auth-box, .item-list { display: flex; flex-direction: column; gap: 5px; }
-        .item-card { background: #090d16; border: 1px solid var(--border); padding: 12px; border-radius: 8px; margin-bottom: 10px; }
-        .item-card h3 { color: var(--accent); font-size: 1.1rem; }
-        .item-card p { font-size: 0.85rem; color: var(--text-muted); margin-top: 3px; }
-        .badge { display: inline-block; background: #334155; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-right: 4px; margin-top: 4px; }
-        .user-info { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-bottom: 10px; color: var(--text-muted); }
-        .delete-btn { background: var(--danger); color: white; width: auto; padding: 5px 10px; font-size: 0.75rem; margin: 0; }
+
+        .item-card { background: #090d16; border: 1px solid var(--border); padding: 14px; border-radius: 10px; margin-bottom: 12px; position: relative; border-left: 4px solid var(--accent); }
+        .item-card h3 { color: var(--accent); font-size: 1.15rem; display: flex; justify-content: space-between; align-items: center; }
+        .item-card p { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+        
+        .badge-container { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
+        .badge { background: #1e293b; color: #e2e8f0; padding: 4px 8px; border-radius: 6px; font-size: 0.78rem; border: 1px solid #334155; }
+        
+        .user-panel { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; background: #090d16; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 10px; }
+        .delete-btn { background: var(--danger); color: white; width: auto; padding: 5px 12px; font-size: 0.75rem; margin: 0; border-radius: 6px; }
         .hidden { display: none !important; }
+        
+        .price-tag { color: var(--success); font-weight: bold; font-size: 1rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>Mobile2 Global Pazar</h1>
-        <p style="font-size: 0.8rem; color: var(--text-muted);">Güvenli Efsun ve İtem Arama Sistemi</p>
+        <h1>⚔️ Mobile2 Global Pazar</h1>
+        <p>Güvenli Efsun & İtem Arama ve Pazar Sistemi</p>
     </header>
 
-    <!-- ÜRÜN ARAMA VE FİLTRELEME -->
+    <!-- HESAP / GİRİŞ ALANI -->
     <div class="card">
-        <h2>🔍 İtem / Efsun Ara</h2>
-        <input type="text" id="searchItemName" placeholder="İtem Adı (Örn: Siyah Çelik)">
-        <input type="text" id="searchEfsun" placeholder="Aranan Efsun (Örn: Kılıç Savunması)">
-        <button onclick="loadItems()">Filtrele ve Ara</button>
-    </div>
-
-    <!-- ÜYELİK ALANI -->
-    <div class="card" id="authCard">
-        <h2>👤 Hesap / Giriş</h2>
+        <h2>👤 Hesap Yönetimi</h2>
         <div id="loggedOutView">
             <input type="email" id="email" placeholder="E-posta Adresi">
             <input type="password" id="password" placeholder="Şifre">
-            <div style="display: flex; gap: 10px;">
-                <button onclick="signUp()">Kayıt Ol</button>
-                <button onclick="signIn()" style="background: #10b981; color: white;">Giriş Yap</button>
+            <div class="row">
+                <button onclick="signUp()" style="background: #3b82f6; color: white;">Kayıt Ol</button>
+                <button onclick="signIn()">Giriş Yap</button>
             </div>
         </div>
         <div id="loggedInView" class="hidden">
-            <div class="user-info">
-                <span id="userEmailDisplay"></span>
-                <button onclick="signOut()" style="background: var(--danger); color: white; width: auto; padding: 5px 10px; margin:0;">Çıkış Yap</button>
+            <div class="user-panel">
+                <span id="userEmailDisplay" style="color: var(--success); font-weight: 500;"></span>
+                <button onclick="signOut()" class="delete-btn">Çıkış Yap</button>
             </div>
         </div>
-        <p id="authMsg" style="font-size: 0.8rem; margin-top: 5px; color: var(--accent);"></p>
+        <p id="authMsg" style="font-size: 0.8rem; margin-top: 8px; color: var(--accent); text-align: center;"></p>
     </div>
 
-    <!-- İTEM EKLEME FORMU (Sadece Giriş Yapanlar Görebilir) -->
-    <div class="card hidden" id="addItemCard">
-        <h2>➕ İlan Ekle</h2>
-        <input type="text" id="itemName" placeholder="İtem Adı (Örn: Muharebe Kılıcı +9)">
-        <select id="itemCategory">
-            <option value="Silah">Silah</option>
-            <option value="Zırh">Zırh</option>
-            <option value="Takı">Takı / Kalkan</option>
-            <option value="Diğer">Diğer</option>
-        </select>
-        <input type="text" id="efsun1" placeholder="1. Efsun (Örn: Yarı İnsan +10)">
-        <input type="text" id="efsun2" placeholder="2. Efsun (Örn: Delici Vuruş +10)">
-        <input type="text" id="efsun3" placeholder="3. Efsun (Opsiyonel)">
-        <input type="text" id="efsun4" placeholder="4. Efsun (Opsiyonel)">
-        <input type="text" id="efsun5" placeholder="5. Efsun (Opsiyonel)">
-        <input type="text" id="itemPrice" placeholder="Fiyat (Örn: 25 Won / 2 T)">
-        <input type="text" id="sellerName" placeholder="Oyun İçi Karakter Adı">
-        <input type="text" id="contactInfo" placeholder="İletişim (Discord / WhatsApp / Nick)">
-        <button onclick="addItem()" style="background: #10b981; color: white;">İlanı Yayınla</button>
-    </div>
-
-    <!-- İTEMLERİN LİSTELENDİĞİ ALAN -->
+    <!-- İTEM ARAMA VE FİLTRELEME -->
     <div class="card">
-        <h2>📜 Pazardaki İlanlar</h2>
-        <div id="itemList" class="item-list">
+        <h2>🔍 Gelişmiş Arama</h2>
+        <div class="row">
+            <div>
+                <label>İtem Adı</label>
+                <input type="text" id="searchItemName" placeholder="Örn: Zehir Kılıcı" onkeyup="loadItems()">
+            </div>
+            <div>
+                <label>Aranan Efsun</label>
+                <input type="text" id="searchEfsun" placeholder="Örn: Kılıç Savunması" onkeyup="loadItems()">
+            </div>
+        </div>
+    </div>
+
+    <!-- İLAN EKLEME FORMU (Giriş Yapınca Görünür) -->
+    <div class="card hidden" id="addItemCard">
+        <h2>➕ Yeni İlan Ekle</h2>
+        
+        <div class="row">
+            <div>
+                <label>İtem Seçin veya Yazın</label>
+                <select id="itemCategorySelect" onchange="document.getElementById('itemName').value = this.value">
+                    <option value="">-- Hazır İtem Seç --</option>
+                    <option value="Zehir Kılıcı">Zehir Kılıcı</option>
+                    <option value="Muharebe Kılıcı">Muharebe Kılıcı</option>
+                    <option value="Siyah Çelik Zırh">Siyah Çelik Zırh</option>
+                    <option value="Şahin Kalkan">Şahin Kalkan</option>
+                    <option value="Anka Ayakkabı">Anka Ayakkabı</option>
+                    <option value="Cennetin Gözü Kolye">Cennetin Gözü Kolye</option>
+                    <option value="Cennetin Gözü Küpe">Cennetin Gözü Küpe</option>
+                    <option value="Bilezik">Bilezik</option>
+                </select>
+            </div>
+            <div>
+                <label>İtem Artısı (+)</label>
+                <select id="itemPlus">
+                    <option value="+9">+9</option>
+                    <option value="+8">+8</option>
+                    <option value="+7">+7</option>
+                    <option value="+6">+6</option>
+                    <option value="+0">+0</option>
+                </select>
+            </div>
+        </div>
+
+        <label>İtem Tam Adı (Düzenleyebilirsin)</label>
+        <input type="text" id="itemName" placeholder="Örn: Zehir Kılıcı +9">
+
+        <!-- EFSUN SEÇİM KUTULARI -->
+        <label>1. Efsun</label>
+        <div class="row">
+            <select id="efsun1_adi" style="flex: 2;">
+                <option value="">Efsun Seçiniz</option>
+                <option value="Yarı İnsanlara Karşı Güçlü">Yarı İnsanlara Karşı Güçlü</option>
+                <option value="Kılıç Savunması">Kılıç Savunması</option>
+                <option value="Çift El Savunması">Çift El Savunması</option>
+                <option value="Bıçak Savunması">Bıçak Savunması</option>
+                <option value="Oka Karşı Dayanıklılık">Oka Karşı Dayanıklılık</option>
+                <option value="Büyü Hızı">Büyü Hızı</option>
+                <option value="Delici Vuruş Şansı">Delici Vuruş Şansı</option>
+                <option value="Kritik Vuruş Şansı">Kritik Vuruş Şansı</option>
+                <option value="Max HP">Max HP</option>
+                <option value="Güç / Çeviklik / Zeka">Güç / Çeviklik / Zeka</option>
+            </select>
+            <input type="text" id="efsun1_deger" placeholder="Oran (Örn: 10)" style="flex: 1;">
+        </div>
+
+        <label>2. Efsun</label>
+        <div class="row">
+            <select id="efsun2_adi" style="flex: 2;">
+                <option value="">Efsun Seçiniz</option>
+                <option value="Yarı İnsanlara Karşı Güçlü">Yarı İnsanlara Karşı Güçlü</option>
+                <option value="Kılıç Savunması">Kılıç Savunması</option>
+                <option value="Çift El Savunması">Çift El Savunması</option>
+                <option value="Bıçak Savunması">Bıçak Savunması</option>
+                <option value="Oka Karşı Dayanıklılık">Oka Karşı Dayanıklılık</option>
+                <option value="Büyü Hızı">Büyü Hızı</option>
+                <option value="Delici Vuruş Şansı">Delici Vuruş Şansı</option>
+                <option value="Kritik Vuruş Şansı">Kritik Vuruş Şansı</option>
+                <option value="Max HP">Max HP</option>
+                <option value="Güç / Çeviklik / Zeka">Güç / Çeviklik / Zeka</option>
+            </select>
+            <input type="text" id="efsun2_deger" placeholder="Oran (Örn: 15)" style="flex: 1;">
+        </div>
+
+        <label>3. Efsun (İsteğe Bağlı)</label>
+        <div class="row">
+            <select id="efsun3_adi" style="flex: 2;">
+                <option value="">Efsun Seçiniz</option>
+                <option value="Yarı İnsanlara Karşı Güçlü">Yarı İnsanlara Karşı Güçlü</option>
+                <option value="Kılıç Savunması">Kılıç Savunması</option>
+                <option value="Çift El Savunması">Çift El Savunması</option>
+                <option value="Bıçak Savunması">Bıçak Savunması</option>
+                <option value="Kritik Vuruş Şansı">Kritik Vuruş Şansı</option>
+                <option value="Max HP">Max HP</option>
+            </select>
+            <input type="text" id="efsun3_deger" placeholder="Oran" style="flex: 1;">
+        </div>
+
+        <div class="row">
+            <div>
+                <label>Fiyat</label>
+                <input type="text" id="itemPrice" placeholder="Örn: 30 Won / 3 T">
+            </div>
+            <div>
+                <label>Karakter Adı (Nick)</label>
+                <input type="text" id="sellerName" placeholder="Oyun içi nick">
+            </div>
+        </div>
+
+        <label>İletişim Bilgisi (Discord / Not)</label>
+        <input type="text" id="contactInfo" placeholder="Örn: Discord: isim#0000 veya Mavi Bayrak">
+
+        <button onclick="addItem()" style="background: var(--success); color: white; margin-top: 15px;">İlanı Yayınla</button>
+    </div>
+
+    <!-- İLANLARIN LİSTELENDİĞİ ALAN -->
+    <div class="card">
+        <h2>📜 Aktif Pazar İlanları</h2>
+        <div id="itemList">
             <p style="text-align: center; color: var(--text-muted);">İlanlar yükleniyor...</p>
         </div>
     </div>
@@ -113,23 +216,20 @@
 
     let currentUser = null;
 
-    // Sayfa açıldığında oturumu ve ilanları kontrol et
     window.addEventListener('DOMContentLoaded', async () => {
         const { data: { session } } = await _supabase.auth.getSession();
         updateAuthUI(session);
         loadItems();
     });
 
-    // Kayıt Ol
     async function signUp() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const { data, error } = await _supabase.auth.signUp({ email, password });
-        if (error) document.getElementById('authMsg').innerText = "Hata: " + error.message;
-        else document.getElementById('authMsg').innerText = "Kayıt başarılı! E-postanızı kontrol edin veya giriş yapın.";
+        if (error) document.getElementById('authMsg').innerText = "Kayıt Hatası: " + error.message;
+        else document.getElementById('authMsg').innerText = "Kayıt başarılı! Şimdi giriş yapabilirsiniz.";
     }
 
-    // Giriş Yap
     async function signIn() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
@@ -142,13 +242,11 @@
         }
     }
 
-    // Çıkış Yap
     async function signOut() {
         await _supabase.auth.signOut();
         updateAuthUI(null);
     }
 
-    // Arayüzü Giriş Durumuna Göre Güncelle
     function updateAuthUI(session) {
         currentUser = session ? session.user : null;
         if (currentUser) {
@@ -164,54 +262,60 @@
         loadItems();
     }
 
-    // İlan Ekle
     async function addItem() {
         if (!currentUser) return alert("Önce giriş yapmalısınız!");
 
-        const item_name = document.getElementById('itemName').value;
-        const category = document.getElementById('itemCategory').value;
-        const efsun_1 = document.getElementById('efsun1').value;
-        const efsun_2 = document.getElementById('efsun2').value;
-        const efsun_3 = document.getElementById('efsun3').value;
-        const efsun_4 = document.getElementById('efsun4').value;
-        const efsun_5 = document.getElementById('efsun5').value;
-        const price = document.getElementById('itemPrice').value;
-        const seller_name = document.getElementById('sellerName').value;
-        const contact_info = document.getElementById('contactInfo').value;
+        let baseName = document.getElementById('itemName').value;
+        let plus = document.getElementById('itemPlus').value;
+        if (!baseName) return alert("Lütfen item adı seçin veya yazın!");
 
-        if (!item_name || !price || !seller_name) {
-            alert("Lütfen İsim, Fiyat ve Karakter Adı alanlarını doldurun!");
+        let item_name = `${baseName} ${plus}`;
+        let category = "Genel";
+        
+        let e1_adi = document.getElementById('efsun1_adi').value;
+        let e1_val = document.getElementById('efsun1_deger').value;
+        let efsun_1 = e1_adi ? `${e1_adi} +${e1_val}` : null;
+
+        let e2_adi = document.getElementById('efsun2_adi').value;
+        let e2_val = document.getElementById('efsun2_deger').value;
+        let efsun_2 = e2_adi ? `${e2_adi} +${e2_val}` : null;
+
+        let e3_adi = document.getElementById('efsun3_adi'].value;
+        let e3_val = document.getElementById('efsun3_deger').value;
+        let efsun_3 = e3_adi ? `${e3_adi} +${e3_val}` : null;
+
+        let price = document.getElementById('itemPrice').value;
+        let seller_name = document.getElementById('sellerName').value;
+        let contact_info = document.getElementById('contactInfo').value;
+
+        if (!price || !seller_name) {
+            alert("Lütfen Fiyat ve Karakter Adı alanlarını doldurun!");
             return;
         }
 
         const { error } = await _supabase.from('items').insert([{
             user_id: currentUser.id,
-            item_name, category, efsun_1, efsun_2, efsun_3, efsun_4, efsun_5, price, seller_name, contact_info
+            item_name, category, efsun_1, efsun_2, efsun_3, price, seller_name, contact_info
         }]);
 
         if (error) {
-            alert("İlan eklenirken hata oluştu: " + error.message);
+            alert("İlan eklenirken hata: " + error.message);
         } else {
-            alert("İlan başarıyla eklendi!");
+            alert("İlan başarıyla yayınlandı!");
             document.getElementById('itemName').value = '';
-            document.getElementById('efsun1').value = '';
-            document.getElementById('efsun2').value = '';
-            document.getElementById('efsun3').value = '';
-            document.getElementById('efsun4').value = '';
-            document.getElementById('efsun5').value = '';
+            document.getElementById('efsun1_deger').value = '';
+            document.getElementById('efsun2_deger').value = '';
+            document.getElementById('efsun3_deger').value = '';
             document.getElementById('itemPrice').value = '';
             loadItems();
         }
     }
 
-    // İlanları Listele ve Filtrele
     async function loadItems() {
         const searchName = document.getElementById('searchItemName').value.toLowerCase();
         const searchEfsun = document.getElementById('searchEfsun').value.toLowerCase();
 
-        let query = _supabase.from('items').select('*').order('created_at', { ascending: false });
-
-        const { data: items, error } = await query;
+        const { data: items, error } = await _supabase.from('items').select('*').order('created_at', { ascending: false });
         const listDiv = document.getElementById('itemList');
 
         if (error) {
@@ -224,10 +328,9 @@
             return;
         }
 
-        // Filtreleme mantığı
         let filtered = items.filter(item => {
             const matchesName = item.item_name.toLowerCase().includes(searchName);
-            const efsunlarText = `${item.efsun_1 || ''} ${item.efsun_2 || ''} ${item.efsun_3 || ''} ${item.efsun_4 || ''} ${item.efsun_5 || ''}`.toLowerCase();
+            const efsunlarText = `${item.efsun_1 || ''} ${item.efsun_2 || ''} ${item.efsun_3 || ''}`.toLowerCase();
             const matchesEfsun = efsunlarText.includes(searchEfsun);
             return matchesName && matchesEfsun;
         });
@@ -240,7 +343,7 @@
         listDiv.innerHTML = '';
         filtered.forEach(item => {
             let efsunlarHTML = '';
-            [item.efsun_1, item.efsun_2, item.efsun_3, item.efsun_4, item.efsun_5].forEach(e => {
+            [item.efsun_1, item.efsun_2, item.efsun_3].forEach(e => {
                 if(e) efsunlarHTML += `<span class="badge">${e}</span>`;
             });
 
@@ -251,12 +354,11 @@
 
             listDiv.innerHTML += `
                 <div class="item-card">
-                    <h3>${item.item_name} <span style="font-size:0.75rem; color:var(--text-muted);">(${item.category})</span></h3>
-                    <div style="margin: 5px 0;">${efsunlarHTML}</div>
-                    <p><b>Fiyat:</b> <span style="color:#10b981; font-weight:bold;">${item.price}</span></p>
-                    <p><b>Satıcı:</b> ${item.seller_name} | <b>İletişim:</b> ${item.contact_info}</p>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                        <span style="font-size: 0.7rem; color: var(--text-muted);">${new Date(item.created_at).toLocaleDateString()}</span>
+                    <h3>${item.item_name} <span class="price-tag">${item.price}</span></h3>
+                    <div class="badge-container">${efsunlarHTML}</div>
+                    <p><b>Satıcı:</b> ${item.seller_name} | <b>İletişim:</b> ${item.contact_info || 'Belirtilmemiş'}</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid #1e293b; padding-top: 6px;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">${new Date(item.created_at).toLocaleDateString()}</span>
                         ${deleteBtnHTML}
                     </div>
                 </div>
@@ -264,7 +366,6 @@
         });
     }
 
-    // İlan Silme
     async function deleteItem(id) {
         if(!confirm("Bu ilanı silmek istediğinize emin misiniz?")) return;
         const { error } = await _supabase.from('items').delete().eq('id', id);
