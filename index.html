@@ -71,6 +71,8 @@ dialog h2{font-family:Cinzel,Georgia,serif;font-size:1.2rem;color:var(--gold2);m
 .hide{display:none!important}
 #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:50;background:var(--panel2);border:1px solid var(--gold);padding:10px 16px;border-radius:999px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;max-width:92vw;text-align:center}
 #toast.on{opacity:1}
+.notice{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:rgba(224,166,58,.1);border:1px solid var(--gold);border-radius:12px;padding:10px 12px;font-size:.85rem;margin:12px 0}
+.efv{text-align:center}
 footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
 @media(min-width:720px){.grid{grid-template-columns:1fr 1fr}.filters{grid-template-columns:2fr 2fr 1fr 1fr 1fr}.filters .full{grid-column:auto}.hero h1{font-size:2.2rem}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -85,13 +87,16 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
 <main class="wrap">
   <section class="hero">
     <h1>Aradığın efsunlu itemi bul.</h1>
-    <p>İtem adına, efsuna, artıya ve fiyata göre ara. İlan vermek ücretsiz, ilanlar 14 gün yayında kalır.</p>
+    <p>İtem adına, efsuna, artıya ve fiyata göre ara. İlanlar 24 veya 48 saat yayında kalır.</p>
+    <div class="notice"><span>🎮 Bu pazar şu an <b>sadece Mobile2 Global</b> için hazırlandı. İleride başka oyunlar da eklenecek. Başka bir oyundan geliyorsan takipte kal.</span></div>
   </section>
 
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" id="tabMarket" aria-selected="true">Pazar</button>
     <button class="tab hide" role="tab" id="tabMine" aria-selected="false">İlanlarım</button>
   </div>
+
+  <div class="notice hide" id="quotaBar"><span id="quotaTxt"></span><button class="btn sm" id="moreSlots">Daha fazla ilan · Yakında</button></div>
 
   <div class="filters">
     <div class="full"><label for="fName">İtem adı</label><input id="fName" placeholder="Örn: Zehir Kılıcı" autocomplete="off"></div>
@@ -105,7 +110,7 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
   <div class="meta"><span id="count"></span><button class="btn sm" id="resetBtn">Filtreleri temizle</button></div>
   <div id="list" class="grid"></div>
   <div style="text-align:center;margin-top:14px"><button class="btn hide" id="moreBtn">Daha fazla göster</button></div>
-  <footer>Oyun içi alışverişte dikkatli ol: kimseye şifreni verme, ödemeyi item teslimatıyla birlikte yap.</footer>
+  <footer>Mobile2 Global için hazırlandı. Oyun içi alışverişte dikkatli ol: kimseye şifreni verme, ödemeyi item teslimatıyla birlikte yap.</footer>
 </main>
 
 <button class="btn gold fab" id="newBtn">+ İlan ver</button>
@@ -131,24 +136,28 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
 
 <!-- İlan formu -->
 <dialog id="postDlg">
-  <h2>Yeni ilan</h2>
+  <h2 id="postTitle">Yeni ilan</h2>
+  <p class="hint">Oyun: Mobile2 Global</p>
   <div class="two">
     <div><label for="pCat">Kategori</label><select id="pCat"></select></div>
     <div><label for="pPlus">Artı</label><select id="pPlus"></select></div>
   </div>
-  <label for="pName">İtem adı</label>
-  <input id="pName" list="itemNames" maxlength="60" placeholder="Örn: Zehir Kılıcı" autocomplete="off">
-  <datalist id="itemNames"></datalist>
-  <label>Efsunlar (en fazla 5)</label>
+  <label for="pName">İtem</label>
+  <select id="pName"></select>
+  <label>Efsunlar (en az 2, en fazla 5)</label>
   <div id="efRows"></div>
+  <p class="hint">Efsun değeri 1 ile 15 arasında bir sayı olmalı.</p>
   <div class="two">
-    <div><label for="pPrice">Fiyat</label><input id="pPrice" type="number" min="0" step="any" inputmode="decimal" placeholder="30"></div>
+    <div><label for="pPrice">Fiyat</label><input id="pPrice" type="number" min="1" max="999999999999" step="any" inputmode="decimal" placeholder="Örn: 30"></div>
     <div><label for="pCur">Para birimi</label><select id="pCur"></select></div>
   </div>
   <div class="two">
-    <div><label for="pNick">Karakter adı</label><input id="pNick" maxlength="30" placeholder="Oyun içi nick"></div>
-    <div><label for="pContact">İletişim</label><input id="pContact" maxlength="80" placeholder="Discord / not"></div>
+    <div><label for="pNick">Karakter adı (isteğe bağlı)</label><input id="pNick" maxlength="16" placeholder="Oyun içi nick" autocomplete="off"></div>
+    <div><label for="pContact">İletişim (isteğe bağlı)</label><input id="pContact" maxlength="40" placeholder="Discord vb." autocomplete="off"></div>
   </div>
+  <p class="hint">Alıcıların sana ulaşabilmesi için ikisinden en az biri dolu olmalı. Bağlantı (link) yazılamaz.</p>
+  <label for="pDur">İlan süresi</label>
+  <select id="pDur"><option value="24">24 saat</option><option value="48">48 saat</option></select>
   <p class="err" id="postErr"></p>
   <div class="two" style="margin-top:10px">
     <button class="btn" id="postClose">Vazgeç</button>
@@ -156,17 +165,23 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
   </div>
 </dialog>
 
+<dialog id="limitDlg">
+  <h2>Ücretsiz ilan hakkın doldu</h2>
+  <p class="hint" style="font-size:.9rem">Aynı anda en fazla 2 aktif ilanın olabilir. Bir ilanı "Satıldı" yapabilir, silebilir ya da süresinin bitmesini bekleyebilirsin.</p>
+  <div class="notice">⭐ <span>Daha fazla ilan hakkı için küçük ücretli paketler çok yakında geliyor.</span></div>
+  <button class="btn gold" id="limitClose" style="width:100%;margin-top:6px">Tamam</button>
+</dialog>
+
 <script>
 const SUPABASE_URL='https://bgugtvlixerwlhrgqmfw.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_V11Gt6rJmKP90QQ4G7L-ag_1NpCea-i';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
-const PAGE=12, DAYS=14;
-const CATS=['Silah','Zırh','Kask','Kalkan','Ayakkabı','Bilezik','Kolye','Küpe','Diğer'];
-const CURS=['Won','Yang','TL'];
+const PAGE=12, FREE_LIMIT=2;
+const CURS=['TL','Yang'];
 const PLUS=['+9','+8','+7','+6','+5','+4','+3','+2','+1','+0'];
-const EFSUN=['Yarı İnsanlara Karşı Güçlü','Canavarlara Karşı Güçlü','Savaşçılara Karşı Güçlü','Ninjalara Karşı Güçlü','Surilere Karşı Güçlü','Şamanlara Karşı Güçlü','Kılıç Savunması','Çift El Savunması','Bıçak Savunması','Çan Savunması','Yelpaze Savunması','Oka Karşı Dayanıklılık','Büyü Savunması','Büyü Hızı','Delici Vuruş Şansı','Kritik Vuruş Şansı','Saldırı Hızı','Hareket Hızı','Saldırı Değeri','Max HP','Max SP','Güç','Çeviklik','Zeka','Canlılık'];
-const NAMES=['Zehir Kılıcı','Muharebe Kılıcı','Siyah Çelik Zırh','Şahin Kalkan','Anka Ayakkabı','Cennetin Gözü Kolye','Cennetin Gözü Küpe','Bilezik'];
+let CATALOG=[], EFSUN=[], active=0, editId=null;
+const cache=new Map();
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -178,14 +193,26 @@ let user=null, view='market', page=0, total=0, timer, toastT, authMode='in', rec
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600)}
 
 /* ---------- Kurulum ---------- */
-$('#fCat').innerHTML=opts(CATS,'Hepsi');
-$('#pCat').innerHTML=opts(CATS);
-$('#fPlus').innerHTML=opts(PLUS,'Hepsi');
-$('#pPlus').innerHTML=opts(PLUS);
-$('#fCur').innerHTML=opts(CURS,'Hepsi');
-$('#pCur').innerHTML=opts(CURS);
-$('#itemNames').innerHTML=NAMES.map(n=>`<option value="${esc(n)}">`).join('');
-$('#efRows').innerHTML=[1,2,3,4,5].map(i=>`<div class="ef"><select id="ef${i}n" aria-label="Efsun ${i}">${opts(EFSUN,'Efsun '+i+(i>2?' (isteğe bağlı)':''))}</select><input id="ef${i}v" type="number" min="0" step="any" inputmode="decimal" placeholder="Değer" aria-label="Efsun ${i} değeri"></div>`).join('');
+$('#fPlus').innerHTML=opts(PLUS,'Hepsi');$('#pPlus').innerHTML=opts(PLUS);
+$('#fCur').innerHTML=opts(CURS,'Hepsi');$('#pCur').innerHTML=opts(CURS);
+async function initCatalog(){
+  const [a,b]=await Promise.all([sb.from('item_catalog').select('category,name').order('name'),sb.from('efsun_catalog').select('name').order('name')]);
+  if(a.error||b.error){toast('Katalog yüklenemedi. supabase.sql dosyasını çalıştırdın mı?');return}
+  CATALOG=a.data;EFSUN=b.data.map(x=>x.name);
+  const cats=[...new Set(CATALOG.map(x=>x.category))].sort((x,y)=>x.localeCompare(y,'tr'));
+  $('#fCat').innerHTML=opts(cats,'Hepsi');$('#pCat').innerHTML=opts(cats,'Kategori seç');
+  fillNames();
+  $('#efRows').innerHTML=[1,2,3,4,5].map(i=>`<div class="ef"><select id="ef${i}n" aria-label="Efsun ${i}">${opts(EFSUN,'Efsun '+i+(i>2?' (isteğe bağlı)':' (zorunlu)'))}</select><input id="ef${i}v" class="efv" type="text" inputmode="numeric" maxlength="2" placeholder="1-15" autocomplete="off" aria-label="Efsun ${i} değeri"></div>`).join('');
+}
+function fillNames(){const c=$('#pCat').value;$('#pName').innerHTML=opts(CATALOG.filter(x=>x.category===c).map(x=>x.name),c?'İtem seç':'Önce kategori seç')}
+async function refreshQuota(){
+  if(!user){active=0;$('#quotaBar').classList.add('hide');return}
+  const {count}=await sb.from('items').select('id',{count:'exact',head:true}).eq('user_id',user.id).eq('status','active').gt('expires_at',new Date().toISOString());
+  active=count||0;
+  $('#quotaTxt').textContent=`Aktif ilanların: ${active}/${FREE_LIMIT}`;
+  $('#quotaBar').classList.toggle('hide',view!=='mine');
+}
+const dbErr=m=>/check constraint/i.test(m)?'Girdiğin bilgiler kurallara uymuyor. Alanları kontrol et.':m;
 
 /* ---------- Oturum ---------- */
 function renderAuth(){
@@ -283,56 +310,83 @@ async function load(reset){
   const shown=$('#list').querySelectorAll('.card').length;
   $('#count').textContent=total?`${total} ilan`:'';
   $('#moreBtn').classList.toggle('hide',shown>=total);
+  refreshQuota();
 }
 function card(i){
+  cache.set(String(i.id),i);
   const efs=[1,2,3,4,5].map(n=>i['efsun_'+n]).filter(Boolean).map(e=>`<span class="tag">${esc(e)}</span>`).join('');
-  const expired=new Date(i.expires_at)<new Date(), sold=i.status==='sold';
-  const plus=(i.item_name.match(/\+\d+$/)||[''])[0], base=plus?i.item_name.slice(0,-plus.length).trim():i.item_name;
-  const price=i.price_value!=null?`${Number(i.price_value)} ${esc(i.currency||'')}`:esc(i.price||'');
+  const ms=new Date(i.expires_at)-Date.now(),expired=ms<=0,sold=i.status==='sold';
+  const m=i.item_name.match(/^(.*)\s(\+\d+)$/),plus=m?m[2]:'',base=m?m[1]:i.item_name;
+  const price=i.price_value!=null?`${Number(i.price_value).toLocaleString('tr-TR')} ${esc(i.currency||'')}`:esc(i.price||'');
   const mine=user&&user.id===i.user_id;
   const status=sold?'<span class="tag st">Satıldı</span>':expired?'<span class="tag st">Süresi doldu</span>':'';
-  const left=Math.max(0,Math.ceil((new Date(i.expires_at)-Date.now())/864e5));
+  const left=Math.ceil(ms/36e5);
+  const who=[i.seller_name?`<b>${esc(i.seller_name)}</b>`:'',i.contact_info?esc(i.contact_info):''].filter(Boolean).join(' · ')||'İletişim bilgisi yok';
   const acts=mine
-    ?`${!sold&&!expired?`<button class="btn sm ok" data-act="sold" data-id="${i.id}">Satıldı</button>`:''}<button class="btn sm" data-act="renew" data-id="${i.id}">Yenile</button><button class="btn sm bad" data-act="del" data-id="${i.id}">Sil</button>`
-    :`<button class="btn sm gold" data-act="copy" data-nick="${esc(i.seller_name)}">/w kopyala</button>`;
+    ?`<button class="btn sm" data-act="edit" data-id="${i.id}">Düzenle</button>${!sold&&!expired?`<button class="btn sm ok" data-act="sold" data-id="${i.id}">Satıldı</button>`:`<button class="btn sm ok" data-act="renew" data-id="${i.id}">Yenile</button>`}<button class="btn sm bad" data-act="del" data-id="${i.id}">Sil</button>`
+    :(i.seller_name?`<button class="btn sm gold" data-act="copy" data-nick="${esc(i.seller_name)}">/w kopyala</button>`:'');
   return `<article class="card ${sold?'sold':''} ${expired?'exp':''}">
     <h3><span>${esc(base)}</span><span class="price">${price}</span></h3>
     <div class="tags">${plus?`<span class="tag plus">${esc(plus)}</span>`:''}${i.category?`<span class="tag">${esc(i.category)}</span>`:''}${status}</div>
     ${efs?`<div class="tags">${efs}</div>`:''}
-    <div class="seller"><b>${esc(i.seller_name)}</b>${i.contact_info?' · '+esc(i.contact_info):''}</div>
-    <div class="foot"><span>${new Date(i.created_at).toLocaleDateString('tr-TR')}${!sold&&!expired?` · ${left} gün kaldı`:''}</span><div class="acts">${acts}</div></div>
+    <div class="seller">${who}</div>
+    <div class="foot"><span>${new Date(i.created_at).toLocaleDateString('tr-TR')}${!sold&&!expired?` · ${left} saat kaldı`:''}</span><div class="acts">${acts}</div></div>
   </article>`;
 }
 
-/* ---------- İlan ver ---------- */
-function openPost(){
+/* ---------- İlan ver / düzenle ---------- */
+async function openPost(item){
   if(!user){toast('İlan vermek için önce giriş yap.');openAuth('in');return}
-  $('#postErr').textContent='';$('#postDlg').showModal();
+  await refreshQuota();
+  const live=item&&item.status==='active'&&new Date(item.expires_at)>new Date();
+  if(!live&&active>=FREE_LIMIT){$('#limitDlg').showModal();return}
+  editId=item?item.id:null;
+  $('#postErr').textContent='';
+  $('#postTitle').textContent=item?'İlanı düzenle':'Yeni ilan';
+  $('#postGo').textContent=item?'Kaydet ve yeniden yayınla':'Yayınla';
+  if(item){
+    $('#pCat').value=item.category;fillNames();
+    const m=item.item_name.match(/^(.*)\s(\+\d+)$/);
+    $('#pName').value=m?m[1]:'';$('#pPlus').value=m?m[2]:'+0';
+    for(let n=1;n<=5;n++){const e=(item['efsun_'+n]||'').match(/^(.*) \+(\d+)$/);$(`#ef${n}n`).value=e?e[1]:'';$(`#ef${n}v`).value=e?e[2]:''}
+    $('#pPrice').value=item.price_value??'';$('#pCur').value=item.currency||'TL';
+    $('#pNick').value=item.seller_name||'';$('#pContact').value=item.contact_info||'';$('#pDur').value=item.duration_hours||24;
+  }else{
+    $('#pCat').value='';fillNames();$('#pPlus').selectedIndex=0;
+    for(let n=1;n<=5;n++){$(`#ef${n}n`).value='';$(`#ef${n}v`).value=''}
+    ['#pPrice','#pNick','#pContact'].forEach(x=>$(x).value='');$('#pCur').selectedIndex=0;$('#pDur').value='24';
+  }
+  $('#postDlg').showModal();
 }
 async function postSubmit(){
   const err=$('#postErr'),btn=$('#postGo');err.textContent='';
-  const base=$('#pName').value.trim(),nick=$('#pNick').value.trim(),price=parseFloat($('#pPrice').value);
-  if(base.length<2){err.textContent='İtem adını yaz.';return}
-  if(!(price>0)){err.textContent='Geçerli bir fiyat gir.';return}
-  if(nick.length<2){err.textContent='Karakter adını yaz.';return}
-  const row={user_id:user.id,item_name:`${base} ${$('#pPlus').value}`,category:$('#pCat').value,
-    price_value:price,currency:$('#pCur').value,price:`${price} ${$('#pCur').value}`,
-    seller_name:nick,contact_info:$('#pContact').value.trim()||null,status:'active'};
-  const seen=new Set();
+  const cat=$('#pCat').value,base=$('#pName').value,price=parseFloat($('#pPrice').value);
+  const nick=$('#pNick').value.trim()||null,contact=$('#pContact').value.trim()||null;
+  if(!cat||!base){err.textContent='Kategori ve item seçmelisin.';return}
+  const row={category:cat,item_name:`${base} ${$('#pPlus').value}`,price_value:price,currency:$('#pCur').value,
+    price:`${price} ${$('#pCur').value}`,seller_name:nick,contact_info:contact,duration_hours:+$('#pDur').value,status:'active'};
+  const seen=new Set();let cnt=0;
   for(let n=1;n<=5;n++){
     const nm=$(`#ef${n}n`).value,v=$(`#ef${n}v`).value.trim();
-    if(!nm){row['efsun_'+n]=null;continue}
+    row['efsun_'+n]=null;
+    if(!nm&&!v)continue;
+    if(!nm){err.textContent=`Efsun ${n} için efsun adı seç.`;return}
+    if(!/^\d{1,2}$/.test(v)||+v<1||+v>15){err.textContent=`Efsun ${n} değeri 1 ile 15 arasında bir sayı olmalı.`;return}
     if(seen.has(nm)){err.textContent='Aynı efsunu iki kez seçtin.';return}
-    if(v===''||isNaN(v)){err.textContent=`Efsun ${n} için sayısal değer gir.`;return}
-    seen.add(nm);row['efsun_'+n]=`${nm} +${v}`;
+    seen.add(nm);cnt++;row['efsun_'+n]=`${nm} +${+v}`;
   }
+  if(cnt<2){err.textContent='İlan için en az 2 efsun seçmelisin.';return}
+  if(!(price>0)){err.textContent='Geçerli bir fiyat gir.';return}
+  if(nick&&nick.length<2){err.textContent='Karakter adı en az 2 karakter olmalı.';return}
+  if(contact&&(contact.length<3||/https?:|www\.|\.com|\.net/i.test(contact))){err.textContent='İletişim en az 3 karakter olmalı ve bağlantı içermemeli.';return}
+  if(!nick&&!contact){err.textContent='Karakter adı veya iletişimden en az birini yaz.';return}
   btn.disabled=true;
-  const {error}=await sb.from('items').insert([row]);
+  let r;
+  if(editId){row.expires_at=new Date().toISOString();r=await sb.from('items').update(row).eq('id',editId).eq('user_id',user.id)}
+  else{row.user_id=user.id;r=await sb.from('items').insert([row])}
   btn.disabled=false;
-  if(error){err.textContent='İlan eklenemedi: '+error.message;return}
-  $('#postDlg').close();toast('İlan yayınlandı!');
-  ['#pName','#pPrice','#pContact'].forEach(s=>$(s).value='');
-  for(let n=1;n<=5;n++){$(`#ef${n}n`).value='';$(`#ef${n}v`).value=''}
+  if(r.error){err.textContent=dbErr(r.error.message);return}
+  $('#postDlg').close();toast(editId?'İlan güncellendi ve yeniden yayınlandı.':'İlan yayınlandı!');
   view==='mine'?load(true):setView('mine');
 }
 
@@ -345,12 +399,14 @@ $('#list').addEventListener('click',async e=>{
     catch{toast('Satıcı: '+b.dataset.nick)}
     return;
   }
+  if(act==='edit')return openPost(cache.get(id));
   if(act==='del'){ if(!confirm('Bu ilanı silmek istediğine emin misin?'))return;
     const {error}=await sb.from('items').delete().eq('id',id).eq('user_id',user.id);
     return error?toast('Silinemedi: '+error.message):(toast('İlan silindi.'),load(true)) }
-  const patch=act==='sold'?{status:'sold'}:{status:'active',expires_at:new Date(Date.now()+DAYS*864e5).toISOString()};
+  if(act==='renew'){await refreshQuota();if(active>=FREE_LIMIT)return $('#limitDlg').showModal()}
+  const patch=act==='sold'?{status:'sold'}:{status:'active',expires_at:new Date().toISOString()};
   const {error}=await sb.from('items').update(patch).eq('id',id).eq('user_id',user.id);
-  error?toast('Güncellenemedi: '+error.message):(toast(act==='sold'?'Satıldı olarak işaretlendi.':'İlan 14 gün uzatıldı.'),load(true));
+  error?toast(dbErr(error.message)):(toast(act==='sold'?'Satıldı olarak işaretlendi.':'İlan yeniden yayınlandı.'),load(true));
 });
 $('#authBar').addEventListener('click',async e=>{
   if(e.target.id==='inBtn')openAuth('in');
@@ -360,12 +416,17 @@ document.querySelectorAll('#authModes .tab').forEach(b=>b.onclick=()=>openAuth(b
 $('#authGo').onclick=authSubmit;$('#forgot').onclick=forgot;
 $('#authClose').onclick=()=>$('#authDlg').close();
 $('#pass').addEventListener('keydown',e=>{if(e.key==='Enter')authSubmit()});
-$('#newBtn').onclick=openPost;$('#postGo').onclick=postSubmit;$('#postClose').onclick=()=>$('#postDlg').close();
+$('#newBtn').onclick=()=>openPost();$('#postGo').onclick=postSubmit;$('#postClose').onclick=()=>$('#postDlg').close();
 $('#tabMarket').onclick=()=>setView('market');$('#tabMine').onclick=()=>setView('mine');
 $('#moreBtn').onclick=()=>{page++;load(false)};
 ['fName','fEfsun'].forEach(id=>$('#'+id).addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>load(true),350)}));
 ['fCat','fPlus','fSort','fCur'].forEach(id=>$('#'+id).addEventListener('change',()=>load(true)));
 $('#resetBtn').onclick=()=>{['fName','fEfsun','fCat','fPlus','fCur'].forEach(id=>$('#'+id).value='');$('#fSort').value='new';load(true)};
+$('#pCat').onchange=fillNames;
+$('#moreSlots').onclick=()=>$('#limitDlg').showModal();
+$('#limitClose').onclick=()=>$('#limitDlg').close();
+$('#efRows').addEventListener('input',e=>{if(!e.target.classList.contains('efv'))return;let v=e.target.value.replace(/\D/g,'').replace(/^0+/,'');if(+v>15)v='15';e.target.value=v});
+initCatalog();
 </script>
 </body>
 </html>
