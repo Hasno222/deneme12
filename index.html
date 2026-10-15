@@ -84,6 +84,16 @@ dialog h2{font-family:Cinzel,Georgia,serif;font-size:1.2rem;color:var(--gold2);m
 .ef.x{grid-template-columns:2fr 1fr auto}
 .stn{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:.8rem;color:var(--mute)}
 .stn .tag{color:#9cc2ff;border-color:#35507f}
+textarea{width:100%;padding:10px 12px;background:#0f1525;border:1px solid var(--line);border-radius:var(--r);resize:vertical;color:inherit;font:inherit}
+textarea:focus{border-color:var(--gold);outline:none}
+.tag.srv{color:#7fd6c2;border-color:#2c6b60}
+.sec{grid-column:1/-1;color:var(--gold2);font-family:Cinzel,Georgia,serif;margin-top:8px}
+.choice{display:grid;gap:10px;margin:14px 0}
+.choice .btn{padding:16px;text-align:left;line-height:1.4}
+.choice small{color:var(--mute);font-weight:400}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.link{border:none;background:none;color:var(--mute);text-decoration:underline;cursor:pointer;padding:0}
+@media(max-width:560px){#authBar .seller{display:none}}
 footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
 @media(min-width:720px){.grid{grid-template-columns:1fr 1fr}.filters{grid-template-columns:2fr 2fr 1fr 1fr 1fr}.filters .full{grid-column:auto}.hero h1{font-size:2.2rem}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -92,7 +102,7 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
 <body>
 <header class="top"><div class="wrap">
   <div class="brand">⚔️ Mobile2 Pazar<small>Item ve efsun ilanları</small></div>
-  <div id="authBar"></div>
+  <div style="display:flex;gap:6px;align-items:center"><button class="btn sm" id="fbBtn" aria-label="Geri bildirim gönder">💬 Geri bildirim</button><div id="authBar"></div></div>
 </div></header>
 
 <main class="wrap">
@@ -103,25 +113,33 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
   </section>
 
   <div class="tabs" role="tablist">
-    <button class="tab" role="tab" id="tabMarket" aria-selected="true">Pazar</button>
+    <button class="tab" role="tab" id="tabItems" aria-selected="true">⚔️ İtem</button>
+    <button class="tab" role="tab" id="tabYang" aria-selected="false">💰 Yang</button>
     <button class="tab hide" role="tab" id="tabMine" aria-selected="false">İlanlarım</button>
   </div>
 
   <div class="notice hide" id="quotaBar"><span id="quotaTxt"></span><button class="btn sm" id="moreSlots">Daha fazla ilan · Yakında</button></div>
 
-  <div class="filters">
+  <div class="filters" id="fItems">
     <div class="full"><label for="fName">İtem adı</label><input id="fName" placeholder="Örn: Zehir Kılıcı" autocomplete="off"></div>
     <div class="full"><label for="fEfsun">Efsun</label><input id="fEfsun" placeholder="Örn: Kılıç Savunması" autocomplete="off"></div>
     <div><label for="fCat">Kategori</label><select id="fCat"></select></div>
     <div><label for="fPlus">Artı</label><select id="fPlus"><option value="">Hepsi</option></select></div>
     <div><label for="fSort">Sırala</label><select id="fSort"><option value="new">En yeni</option><option value="low">Fiyat artan</option><option value="high">Fiyat azalan</option></select></div>
     <div><label for="fCur">Para birimi</label><select id="fCur"><option value="">Hepsi</option></select></div>
+    <div><label for="fSrv">Sunucu</label><select id="fSrv"></select></div>
+  </div>
+
+  <div class="filters hide" id="fYang">
+    <div><label for="fySrv">Sunucu</label><select id="fySrv"></select></div>
+    <div><label for="fyUnit">Birim</label><select id="fyUnit"></select></div>
+    <div class="full"><label for="fySort">Sırala</label><select id="fySort"><option value="new">En yeni</option><option value="low">Birim fiyat artan</option><option value="high">Birim fiyat azalan</option></select></div>
   </div>
 
   <div class="meta"><span id="count"></span><button class="btn sm" id="resetBtn">Filtreleri temizle</button></div>
   <div id="list" class="grid"></div>
   <div style="text-align:center;margin-top:14px"><button class="btn hide" id="moreBtn">Daha fazla göster</button></div>
-  <footer>Mobile2 Global için hazırlandı. Oyun içi alışverişte dikkatli ol: kimseye şifreni verme, ödemeyi item teslimatıyla birlikte yap.</footer>
+  <footer>Mobile2 Global için hazırlandı. Oyun içi alışverişte dikkatli ol: kimseye şifreni verme, ödemeyi item teslimatıyla birlikte yap.<br><button class="btn sm" id="fbLink" style="margin-top:10px">💬 Sorun bildir / öneri gönder</button></footer>
 </main>
 
 <button class="btn gold fab" id="newBtn">+ İlan ver</button>
@@ -149,6 +167,7 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
 <dialog id="postDlg">
   <h2 id="postTitle">Yeni ilan</h2>
   <p class="hint">Oyun: Mobile2 Global</p>
+  <label for="pSrv">Sunucu</label><select id="pSrv"></select>
   <div class="two">
     <div><label for="pCat">Kategori</label><select id="pCat"></select></div>
     <div><label for="pPlus">Artı</label><select id="pPlus"></select></div>
@@ -182,6 +201,58 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
   </div>
 </dialog>
 
+<dialog id="typeDlg">
+  <h2>Ne satmak istiyorsun?</h2>
+  <div class="choice">
+    <button class="btn" id="chItem" type="button"><b>⚔️ İtem satışı</b><br><small>Efsunlu silah, zırh, takı ve diğer itemler</small></button>
+    <button class="btn" id="chYang" type="button"><b>💰 Yang satışı</b><br><small>Yangını TL karşılığında sat</small></button>
+  </div>
+  <button class="btn" id="typeClose" type="button" style="width:100%">Vazgeç</button>
+</dialog>
+
+<dialog id="yangDlg">
+  <h2 id="yTitle">Yang satış ilanı</h2>
+  <p class="hint">Oyun: Mobile2 Global</p>
+  <label for="ySrv">Sunucu</label><select id="ySrv"></select>
+  <div class="two">
+    <div><label for="yAmt">Yang miktarı</label><input id="yAmt" type="number" min="0" step="any" inputmode="decimal" placeholder="Örn: 5"></div>
+    <div><label for="yUnit">Birim</label><select id="yUnit"></select></div>
+  </div>
+  <label for="yPrice">Toplam fiyat (TL)</label>
+  <input id="yPrice" type="number" min="0" step="any" inputmode="decimal" placeholder="Örn: 150">
+  <p class="hint" id="yUnitPrice"></p>
+  <div class="two">
+    <div><label for="yNick">Karakter adı (isteğe bağlı)</label><input id="yNick" maxlength="16" autocomplete="off"></div>
+    <div><label for="yContact">İletişim (isteğe bağlı)</label><input id="yContact" maxlength="40" autocomplete="off"></div>
+  </div>
+  <p class="hint">İkisinden en az biri dolu olmalı. Bağlantı (link) yazılamaz.</p>
+  <label for="yDur">İlan süresi</label>
+  <select id="yDur"><option value="24">24 saat</option><option value="48">48 saat</option></select>
+  <p class="err" id="yErr"></p>
+  <div class="two" style="margin-top:10px">
+    <button class="btn" id="yClose" type="button">Vazgeç</button>
+    <button class="btn gold" id="yGo" type="button">Yayınla</button>
+  </div>
+</dialog>
+
+<dialog id="fbDlg">
+  <h2>Geri bildirim</h2>
+  <p class="hint">Hata, öneri ya da şikayetini kısaca yaz. Sayfa ve cihaz bilgisi otomatik eklenir.</p>
+  <label for="fbKind">Konu</label>
+  <select id="fbKind"><option value="hata">🐞 Hata / sorun</option><option value="oneri">💡 Öneri</option><option value="sikayet">🚩 İlan şikayeti</option><option value="diger">Diğer</option></select>
+  <p class="hint hide" id="fbRefTxt"></p>
+  <label for="fbMsg">Mesajın</label>
+  <textarea id="fbMsg" rows="5" maxlength="1000" placeholder="Ne oldu? Hangi adımda oldu? (en az 10 karakter)"></textarea>
+  <label for="fbContact">Dönüş için iletişim (isteğe bağlı)</label>
+  <input id="fbContact" maxlength="60" placeholder="Discord / e-posta" autocomplete="off">
+  <input id="fbHp" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <p class="err" id="fbErr"></p>
+  <div class="two" style="margin-top:10px">
+    <button class="btn" id="fbClose" type="button">Vazgeç</button>
+    <button class="btn gold" id="fbGo" type="button">Gönder</button>
+  </div>
+</dialog>
+
 <dialog id="limitDlg">
   <h2>Ücretsiz ilan hakkın doldu</h2>
   <p class="hint" style="font-size:.9rem">Aynı anda en fazla 2 aktif ilanın olabilir. Bir ilanı "Satıldı" yapabilir, silebilir ya da süresinin bitmesini bekleyebilirsin.</p>
@@ -196,6 +267,8 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
 const PAGE=12, FREE_LIMIT=2;
 const CURS=['TL','Yang'];
+const SERVERS=['Alesta','Tramola','Tuva','Yakamoz'];
+const UNITS=['Won','KK'];
 const PLUS=['+9','+8','+7','+6','+5','+4','+3','+2','+1','+0'];
 let CATALOG=[], EFSUN=[], STONES=[], active=0, editId=null, efShown=2;
 const STONE_CATS=['Silah','Zırh'];
@@ -206,13 +279,29 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const opts=(arr,first)=>(first?`<option value="">${first}</option>`:'')+arr.map(v=>`<option>${esc(v)}</option>`).join('');
 const clean=s=>s.trim().replace(/[%*,()\\]/g,' ').replace(/\s+/g,' ');
 
-let user=null, view='market', page=0, total=0, timer, toastT, authMode='in', recovery=false;
+let user=null, view='items', page=0, total=0, timer, toastT, authMode='in', recovery=false;
 
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600)}
 
 /* ---------- Kurulum ---------- */
 $('#fPlus').innerHTML=opts(PLUS,'Hepsi');$('#pPlus').innerHTML=opts(PLUS);
 $('#fCur').innerHTML=opts(CURS,'Hepsi');$('#pCur').innerHTML=opts(CURS);
+$('#fSrv').innerHTML=opts(SERVERS,'Hepsi');$('#fySrv').innerHTML=opts(SERVERS,'Hepsi');
+$('#pSrv').innerHTML=opts(SERVERS,'Sunucu seç');$('#ySrv').innerHTML=opts(SERVERS,'Sunucu seç');
+$('#fyUnit').innerHTML=opts(UNITS,'Hepsi');$('#yUnit').innerHTML=opts(UNITS);
+let lastErr='';
+addEventListener('error',e=>{lastErr=String(e.message||'').slice(0,200)});
+addEventListener('unhandledrejection',e=>{lastErr=String((e.reason&&e.reason.message)||e.reason||'').slice(0,200)});
+const fmt=n=>Number(n).toLocaleString('tr-TR',{maximumFractionDigits:2});
+const nowIso=()=>new Date().toISOString();
+const prefSrv=()=>{try{return localStorage.getItem('srv')||''}catch{return ''}};
+const savePref=v=>{try{localStorage.setItem('srv',v)}catch{}};
+const contactErr=(n,c)=>{
+  if(n&&n.length<2)return 'Karakter adı en az 2 karakter olmalı.';
+  if(c&&(c.length<3||/https?:|www\.|\.com|\.net/i.test(c)))return 'İletişim en az 3 karakter olmalı ve bağlantı içermemeli.';
+  if(!n&&!c)return 'Karakter adı veya iletişimden en az birini yaz.';
+  return '';
+};
 async function initCatalog(){
   const [a,b,c]=await Promise.all([sb.from('item_catalog').select('category,name').order('name'),sb.from('efsun_catalog').select('name').order('name'),sb.from('stone_catalog').select('name').order('name')]);
   if(a.error||b.error||c.error){toast('Katalog yüklenemedi. supabase.sql dosyasını çalıştırdın mı?');return}
@@ -271,7 +360,7 @@ function renderAuth(){
     ?`<span class="seller" style="margin-right:8px">${esc(user.email)}</span><button class="btn sm" id="outBtn">Çıkış</button>`
     :`<button class="btn sm gold" id="inBtn">Giriş / Kayıt</button>`;
   $('#tabMine').classList.toggle('hide',!user);
-  if(!user&&view==='mine'){setView('market');return}
+  if(!user&&view==='mine'){setView('items');return}
 }
 function setUser(u){user=u;renderAuth();load(true)}
 sb.auth.getSession().then(({data})=>setUser(data.session?.user||null));
@@ -329,62 +418,101 @@ async function forgot(){
 /* ---------- İlanları yükle ---------- */
 function setView(v){
   view=v;
-  $('#tabMarket').setAttribute('aria-selected',v==='market');
+  $('#tabItems').setAttribute('aria-selected',v==='items');
+  $('#tabYang').setAttribute('aria-selected',v==='yang');
   $('#tabMine').setAttribute('aria-selected',v==='mine');
+  $('#fItems').classList.toggle('hide',v!=='items');
+  $('#fYang').classList.toggle('hide',v!=='yang');
+  $('#resetBtn').classList.toggle('hide',v==='mine');
   load(true);
 }
+let loadTok=0;
 async function load(reset){
+  const tok=++loadTok;
   if(reset){page=0;$('#list').innerHTML='<div class="skel"></div><div class="skel"></div>';$('#moreBtn').classList.add('hide')}
-  const now=new Date().toISOString();
-  let q=sb.from('items').select('*',{count:'exact'});
-  if(view==='mine'){ if(!user){return} q=q.eq('user_id',user.id) }
-  else q=q.eq('status','active').gt('expires_at',now);
-
-  const name=clean($('#fName').value),ef=clean($('#fEfsun').value);
-  if(name)q=q.ilike('item_name',`%${name}%`);
-  if(ef)q=q.or(['efsun_1','efsun_2','efsun_3','efsun_4','efsun_5','efsun_6'].map(c=>`${c}.ilike.%${ef}%`).join(','));
-  if($('#fCat').value)q=q.eq('category',$('#fCat').value);
-  if($('#fPlus').value)q=q.ilike('item_name',`%${$('#fPlus').value}`);
-  if($('#fCur').value)q=q.eq('currency',$('#fCur').value);
-  const s=$('#fSort').value;
-  if(s==='low')q=q.order('price_value',{ascending:true,nullsFirst:false});
-  else if(s==='high')q=q.order('price_value',{ascending:false,nullsFirst:false});
-  q=q.order('created_at',{ascending:false}).range(page*PAGE,page*PAGE+PAGE-1);
-
-  const {data,count,error}=await q;
-  if(error){$('#list').innerHTML=`<div class="empty">İlanlar yüklenemedi. Bağlantını kontrol edip tekrar dene.<br><small>${esc(error.message)}</small></div>`;return}
-  total=count||0;
+  let html='',cnt=0,err=null;
+  if(view==='mine'){
+    if(!user)return;
+    const mk=t=>sb.from(t).select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(30);
+    const [a,b]=await Promise.all([mk('items'),mk('yang_listings')]);
+    err=a.error||b.error;
+    if(!err){
+      cnt=total=a.data.length+b.data.length;
+      html=(a.data.length?`<h4 class="sec">İtem ilanlarım (${a.data.length})</h4>`+a.data.map(card).join(''):'')+(b.data.length?`<h4 class="sec">Yang ilanlarım (${b.data.length})</h4>`+b.data.map(yangCard).join(''):'');
+    }
+  }else{
+    const isY=view==='yang';
+    let q=sb.from(isY?'yang_listings':'items').select('*',{count:'exact'}).eq('status','active').gt('expires_at',nowIso());
+    if(isY){
+      if($('#fySrv').value)q=q.eq('server',$('#fySrv').value);
+      if($('#fyUnit').value)q=q.eq('unit',$('#fyUnit').value);
+      const s=$('#fySort').value;
+      if(s==='low')q=q.order('unit_price',{ascending:true});
+      else if(s==='high')q=q.order('unit_price',{ascending:false});
+    }else{
+      const name=clean($('#fName').value),ef=clean($('#fEfsun').value);
+      if(name)q=q.ilike('item_name',`%${name}%`);
+      if(ef)q=q.or(['efsun_1','efsun_2','efsun_3','efsun_4','efsun_5','efsun_6'].map(c=>`${c}.ilike.%${ef}%`).join(','));
+      if($('#fCat').value)q=q.eq('category',$('#fCat').value);
+      if($('#fPlus').value)q=q.ilike('item_name',`%${$('#fPlus').value}`);
+      if($('#fCur').value)q=q.eq('currency',$('#fCur').value);
+      if($('#fSrv').value)q=q.eq('server',$('#fSrv').value);
+      const s=$('#fSort').value;
+      if(s==='low')q=q.order('price_value',{ascending:true,nullsFirst:false});
+      else if(s==='high')q=q.order('price_value',{ascending:false,nullsFirst:false});
+    }
+    q=q.order('created_at',{ascending:false}).range(page*PAGE,page*PAGE+PAGE-1);
+    const r=await q;err=r.error;
+    if(!err){total=r.count||0;cnt=r.data.length;html=r.data.map(isY?yangCard:card).join('')}
+  }
+  if(tok!==loadTok)return;
+  if(err){$('#list').innerHTML=`<div class="empty" style="grid-column:1/-1">İlanlar yüklenemedi. Bağlantını kontrol edip tekrar dene.<br><small>${esc(err.message)}</small></div>`;return}
   if(reset)$('#list').innerHTML='';
-  if(!data.length&&reset){
-    $('#list').innerHTML=`<div class="empty" style="grid-column:1/-1">${view==='mine'?'Henüz ilanın yok. "İlan ver" ile ilk ilanını ekle.':'Bu kriterlere uygun ilan bulunamadı. Filtreleri gevşetmeyi dene.'}</div>`;
-  }else $('#list').insertAdjacentHTML('beforeend',data.map(card).join(''));
+  if(!cnt&&reset){
+    $('#list').innerHTML=`<div class="empty" style="grid-column:1/-1">${view==='mine'?'Henüz ilanın yok. "İlan ver" ile ilk ilanını ekle.':view==='yang'?'Bu kriterlere uygun yang ilanı yok.':'Bu kriterlere uygun ilan bulunamadı. Filtreleri gevşetmeyi dene.'}</div>`;
+  }else $('#list').insertAdjacentHTML('beforeend',html);
   const shown=$('#list').querySelectorAll('.card').length;
   $('#count').textContent=total?`${total} ilan`:'';
-  $('#moreBtn').classList.toggle('hide',shown>=total);
+  $('#moreBtn').classList.toggle('hide',view==='mine'||shown>=total);
   refreshQuota();
 }
+function parts(i,k){
+  cache.set(k+i.id,i);
+  const ms=new Date(i.expires_at)-Date.now(),expired=ms<=0,sold=i.status==='sold',mine=user&&user.id===i.user_id;
+  const st=sold?'<span class="tag st">Satıldı</span>':expired?'<span class="tag st">Süresi doldu</span>':'';
+  const tags=`<div class="tags">${i.server?`<span class="tag srv">📍 ${esc(i.server)}</span>`:''}${st}</div>`;
+  const who=(i.seller_name?`<span>Karakter adı: <b>${esc(i.seller_name)}</b></span>`:'')+(i.contact_info?`<span>İletişim: <b>${esc(i.contact_info)}</b></span>`:'')||'<span>İletişim bilgisi yok</span>';
+  const d=`data-k="${k}" data-id="${i.id}"`;
+  const acts=mine
+    ?`<button class="btn sm" data-act="edit" ${d}>Düzenle</button>${!sold&&!expired?`<button class="btn sm ok" data-act="sold" ${d}>Satıldı</button>`:`<button class="btn sm ok" data-act="renew" ${d}>Yenile</button>`}<button class="btn sm bad" data-act="del" ${d}>Sil</button>`
+    :`${i.seller_name?`<button class="btn sm gold" data-act="copy" data-nick="${esc(i.seller_name)}">/w kopyala</button>`:''}<button class="btn sm" data-act="report" ${d} aria-label="İlanı şikayet et">🚩</button>`;
+  const left=!sold&&!expired?` · ${Math.ceil(ms/36e5)} saat kaldı`:'';
+  return {expired,sold,tags,who,acts,left,date:new Date(i.created_at).toLocaleDateString('tr-TR')};
+}
 function card(i){
-  cache.set(String(i.id),i);
+  const p=parts(i,'i');
   const efs=[1,2,3,4,5,6].map(n=>i['efsun_'+n]).filter(Boolean).map((e,k)=>{
     const m=e.match(/^(.*) (\+\d+)$/);
     return `<li><span class="n">${k+1}.</span><span>${esc(m?m[1]:e)}${m?` <b>${esc(m[2])}</b>`:''}</span></li>`}).join('');
-  const ms=new Date(i.expires_at)-Date.now(),expired=ms<=0,sold=i.status==='sold';
   const m=i.item_name.match(/^(.*)\s(\+\d+)$/),plus=m?m[2]:'',base=m?m[1]:i.item_name;
-  const price=i.price_value!=null?`${Number(i.price_value).toLocaleString('tr-TR')} ${esc(i.currency||'')}`:esc(i.price||'');
-  const mine=user&&user.id===i.user_id;
-  const status=sold?'<span class="tag st">Satıldı</span>':expired?'<span class="tag st">Süresi doldu</span>':'';
-  const left=Math.ceil(ms/36e5);
+  const price=i.price_value!=null?`${fmt(i.price_value)} ${esc(i.currency||'')}`:esc(i.price||'');
   const stn=(i.stones&&i.stones.length)?`<div class="stn">💎 Taşlar: ${i.stones.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>`:'';
-  const who=(i.seller_name?`<span>Karakter adı: <b>${esc(i.seller_name)}</b></span>`:'')+(i.contact_info?`<span>İletişim: <b>${esc(i.contact_info)}</b></span>`:'');
-  const acts=mine
-    ?`<button class="btn sm" data-act="edit" data-id="${i.id}">Düzenle</button>${!sold&&!expired?`<button class="btn sm ok" data-act="sold" data-id="${i.id}">Satıldı</button>`:`<button class="btn sm ok" data-act="renew" data-id="${i.id}">Yenile</button>`}<button class="btn sm bad" data-act="del" data-id="${i.id}">Sil</button>`
-    :(i.seller_name?`<button class="btn sm gold" data-act="copy" data-nick="${esc(i.seller_name)}">/w kopyala</button>`:'');
-  return `<article class="card ${sold?'sold':''} ${expired?'exp':''}">
+  return `<article class="card ${p.sold?'sold':''} ${p.expired?'exp':''}">
     <div class="head"><h3>${esc(base)}${plus?` <span class="tag plus">${esc(plus)}</span>`:''}</h3><span class="price">${price}</span></div>
-    ${status?`<div class="tags">${status}</div>`:''}
+    ${p.tags}
     <ol class="efl">${efs}</ol>${stn}
-    <div class="who">${who||'<span>İletişim bilgisi yok</span>'}</div>
-    <div class="foot"><span>${esc(i.category||'')} · ${new Date(i.created_at).toLocaleDateString('tr-TR')}${!sold&&!expired?` · ${left} saat kaldı`:''}</span><div class="acts">${acts}</div></div>
+    <div class="who">${p.who}</div>
+    <div class="foot"><span>${esc(i.category||'')} · ${p.date}${p.left}</span><div class="acts">${p.acts}</div></div>
+  </article>`;
+}
+function yangCard(i){
+  const p=parts(i,'y');
+  return `<article class="card ${p.sold?'sold':''} ${p.expired?'exp':''}">
+    <div class="head"><h3>💰 ${fmt(i.amount)} ${esc(i.unit)} Yang</h3><span class="price">${fmt(i.price_tl)} TL</span></div>
+    ${p.tags}
+    <div class="seller">Birim fiyat: <b>${fmt(i.price_tl/i.amount)} TL / ${esc(i.unit)}</b></div>
+    <div class="who">${p.who}</div>
+    <div class="foot"><span>${p.date}${p.left}</span><div class="acts">${p.acts}</div></div>
   </article>`;
 }
 
@@ -399,6 +527,7 @@ async function openPost(item){
   $('#postTitle').textContent=item?'İlanı düzenle':'Yeni ilan';
   $('#postGo').textContent=item?'Kaydet ve yeniden yayınla':'Yayınla';
   $('#stRows').innerHTML='';
+  $('#pSrv').value=item?item.server||'':prefSrv();
   if(item){
     $('#pCat').value=item.category;fillNames();toggleStone();
     const m=item.item_name.match(/^(.*)\s(\+\d+)$/);
@@ -417,8 +546,9 @@ async function postSubmit(){
   const err=$('#postErr'),btn=$('#postGo');err.textContent='';
   const cat=$('#pCat').value,base=$('#pName').value,price=parseFloat($('#pPrice').value);
   const nick=$('#pNick').value.trim()||null,contact=$('#pContact').value.trim()||null;
+  if(!$('#pSrv').value){err.textContent='Sunucu seçmelisin.';return}
   if(!cat||!base){err.textContent='Kategori ve item seçmelisin.';return}
-  const row={category:cat,item_name:`${base} ${$('#pPlus').value}`,price_value:price,currency:$('#pCur').value,
+  const row={server:$('#pSrv').value,category:cat,item_name:`${base} ${$('#pPlus').value}`,price_value:price,currency:$('#pCur').value,
     price:`${price} ${$('#pCur').value}`,seller_name:nick,contact_info:contact,duration_hours:+$('#pDur').value,status:'active'};
   const seen=new Set();
   for(let n=1;n<=6;n++){
@@ -446,26 +576,96 @@ async function postSubmit(){
   else{row.user_id=user.id;r=await sb.from('items').insert([row])}
   btn.disabled=false;
   if(r.error){err.textContent=dbErr(r.error.message);return}
+  savePref(row.server);
   $('#postDlg').close();toast(editId?'İlan güncellendi ve yeniden yayınlandı.':'İlan yayınlandı!');
   view==='mine'?load(true):setView('mine');
+}
+
+/* ---------- Yeni ilan türü / Yang ---------- */
+async function openNew(){
+  if(!user){toast('İlan vermek için önce giriş yap.');openAuth('in');return}
+  await refreshQuota();
+  if(active>=FREE_LIMIT){$('#limitDlg').showModal();return}
+  $('#typeDlg').showModal();
+}
+let yEditId=null;
+async function openYang(item){
+  if(!user){toast('İlan vermek için önce giriş yap.');openAuth('in');return}
+  await refreshQuota();
+  const live=item&&item.status==='active'&&new Date(item.expires_at)>new Date();
+  if(!live&&active>=FREE_LIMIT){$('#limitDlg').showModal();return}
+  yEditId=item?item.id:null;
+  $('#yErr').textContent='';
+  $('#yTitle').textContent=item?'Yang ilanını düzenle':'Yang satış ilanı';
+  $('#yGo').textContent=item?'Kaydet ve yeniden yayınla':'Yayınla';
+  $('#ySrv').value=item?item.server||'':prefSrv();
+  $('#yAmt').value=item?item.amount:'';$('#yUnit').value=item?item.unit:UNITS[0];
+  $('#yPrice').value=item?item.price_tl:'';
+  $('#yNick').value=item?item.seller_name||'':'';$('#yContact').value=item?item.contact_info||'':'';
+  $('#yDur').value=item?item.duration_hours||24:'24';
+  yCalc();$('#yangDlg').showModal();
+}
+function yCalc(){const a=parseFloat($('#yAmt').value),p=parseFloat($('#yPrice').value);$('#yUnitPrice').textContent=a>0&&p>0?`Birim fiyat: yaklaşık ${fmt(p/a)} TL / ${$('#yUnit').value}`:''}
+async function yangSubmit(){
+  const err=$('#yErr'),btn=$('#yGo');err.textContent='';
+  const srv=$('#ySrv').value,amt=parseFloat($('#yAmt').value),pr=parseFloat($('#yPrice').value);
+  const nick=$('#yNick').value.trim()||null,contact=$('#yContact').value.trim()||null;
+  if(!srv){err.textContent='Sunucu seçmelisin.';return}
+  if(!(amt>0)||amt>=1e12){err.textContent='Geçerli bir yang miktarı gir.';return}
+  if(!(pr>0)||pr>=1e9){err.textContent='Geçerli bir fiyat gir.';return}
+  const ce=contactErr(nick,contact);if(ce){err.textContent=ce;return}
+  const row={server:srv,amount:amt,unit:$('#yUnit').value,price_tl:pr,seller_name:nick,contact_info:contact,duration_hours:+$('#yDur').value,status:'active'};
+  btn.disabled=true;
+  let r;
+  if(yEditId){row.expires_at=nowIso();r=await sb.from('yang_listings').update(row).eq('id',yEditId).eq('user_id',user.id)}
+  else{row.user_id=user.id;r=await sb.from('yang_listings').insert([row])}
+  btn.disabled=false;
+  if(r.error){err.textContent=dbErr(r.error.message);return}
+  savePref(srv);$('#yangDlg').close();toast(yEditId?'Yang ilanı güncellendi.':'Yang ilanı yayınlandı!');
+  view==='mine'?load(true):setView('mine');
+}
+
+/* ---------- Geri bildirim ---------- */
+let fbRef=null;
+function openFeedback(kind,ref){
+  fbRef=ref||null;
+  $('#fbKind').value=kind||'hata';$('#fbKind').disabled=!!ref;
+  $('#fbRefTxt').textContent=ref?`Şikayet edilen ilan: ${ref.replace('items:','İtem #').replace('yang_listings:','Yang #')}`:'';
+  $('#fbRefTxt').classList.toggle('hide',!ref);
+  $('#fbMsg').value='';$('#fbErr').textContent='';$('#fbDlg').showModal();
+}
+async function fbSubmit(){
+  const err=$('#fbErr');err.textContent='';
+  if($('#fbHp').value){$('#fbDlg').close();return}
+  const msg=$('#fbMsg').value.trim(),contact=$('#fbContact').value.trim()||null;
+  if(msg.length<10){err.textContent='Lütfen en az 10 karakterlik bir açıklama yaz.';return}
+  let last=0;try{last=+localStorage.getItem('fbT')||0}catch{}
+  if(Date.now()-last<30000){err.textContent='Lütfen biraz bekleyip tekrar dene.';return}
+  $('#fbGo').disabled=true;
+  const {error}=await sb.from('feedback').insert([{kind:fbRef?'sikayet':$('#fbKind').value,message:msg,contact,ref:fbRef,page:location.href.slice(0,300),view,user_agent:navigator.userAgent.slice(0,300),last_error:lastErr||null}]);
+  $('#fbGo').disabled=false;
+  if(error){err.textContent='Gönderilemedi: '+error.message;return}
+  try{localStorage.setItem('fbT',Date.now())}catch{}
+  $('#fbDlg').close();toast('Teşekkürler! Bildirimin bize ulaştı.');
 }
 
 /* ---------- Olaylar ---------- */
 $('#list').addEventListener('click',async e=>{
   const b=e.target.closest('button[data-act]');if(!b)return;
-  const act=b.dataset.act,id=b.dataset.id;
+  const act=b.dataset.act,id=b.dataset.id,k=b.dataset.k,T=k==='y'?'yang_listings':'items';
   if(act==='copy'){
     try{await navigator.clipboard.writeText('/w '+b.dataset.nick);toast('Kopyalandı: /w '+b.dataset.nick)}
     catch{toast('Satıcı: '+b.dataset.nick)}
     return;
   }
-  if(act==='edit')return openPost(cache.get(id));
+  if(act==='edit')return k==='y'?openYang(cache.get('y'+id)):openPost(cache.get('i'+id));
+  if(act==='report')return openFeedback('sikayet',`${T}:${id}`);
   if(act==='del'){ if(!confirm('Bu ilanı silmek istediğine emin misin?'))return;
-    const {error}=await sb.from('items').delete().eq('id',id).eq('user_id',user.id);
+    const {error}=await sb.from(T).delete().eq('id',id).eq('user_id',user.id);
     return error?toast('Silinemedi: '+error.message):(toast('İlan silindi.'),load(true)) }
   if(act==='renew'){await refreshQuota();if(active>=FREE_LIMIT)return $('#limitDlg').showModal()}
-  const patch=act==='sold'?{status:'sold'}:{status:'active',expires_at:new Date().toISOString()};
-  const {error}=await sb.from('items').update(patch).eq('id',id).eq('user_id',user.id);
+  const patch=act==='sold'?{status:'sold'}:{status:'active',expires_at:nowIso()};
+  const {error}=await sb.from(T).update(patch).eq('id',id).eq('user_id',user.id);
   error?toast(dbErr(error.message)):(toast(act==='sold'?'Satıldı olarak işaretlendi.':'İlan yeniden yayınlandı.'),load(true));
 });
 $('#authBar').addEventListener('click',async e=>{
@@ -476,12 +676,12 @@ document.querySelectorAll('#authModes .tab').forEach(b=>b.onclick=()=>openAuth(b
 $('#authGo').onclick=authSubmit;$('#forgot').onclick=forgot;
 $('#authClose').onclick=()=>$('#authDlg').close();
 $('#pass').addEventListener('keydown',e=>{if(e.key==='Enter')authSubmit()});
-$('#newBtn').onclick=()=>openPost();$('#postGo').onclick=postSubmit;$('#postClose').onclick=()=>$('#postDlg').close();
-$('#tabMarket').onclick=()=>setView('market');$('#tabMine').onclick=()=>setView('mine');
+$('#newBtn').onclick=openNew;$('#postGo').onclick=postSubmit;$('#postClose').onclick=()=>$('#postDlg').close();
+$('#tabItems').onclick=()=>setView('items');$('#tabYang').onclick=()=>setView('yang');$('#tabMine').onclick=()=>setView('mine');
 $('#moreBtn').onclick=()=>{page++;load(false)};
 ['fName','fEfsun'].forEach(id=>$('#'+id).addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>load(true),350)}));
-['fCat','fPlus','fSort','fCur'].forEach(id=>$('#'+id).addEventListener('change',()=>load(true)));
-$('#resetBtn').onclick=()=>{['fName','fEfsun','fCat','fPlus','fCur'].forEach(id=>$('#'+id).value='');$('#fSort').value='new';load(true)};
+['fCat','fPlus','fSort','fCur','fSrv','fySrv','fyUnit','fySort'].forEach(id=>$('#'+id).addEventListener('change',()=>load(true)));
+$('#resetBtn').onclick=()=>{['fName','fEfsun','fCat','fPlus','fCur','fSrv','fySrv','fyUnit'].forEach(id=>$('#'+id).value='');$('#fSort').value='new';$('#fySort').value='new';load(true)};
 $('#pCat').onchange=()=>{fillNames();toggleStone()};
 $('#addEf').onclick=()=>{if(efShown<6){efShown++;efLayout()}};
 $('#addSt').onclick=()=>addStone();
@@ -490,6 +690,13 @@ $('#stRows').addEventListener('click',e=>{if(e.target.closest('[data-rmst]')){e.
 $('#moreSlots').onclick=()=>$('#limitDlg').showModal();
 $('#limitClose').onclick=()=>$('#limitDlg').close();
 $('#efRows').addEventListener('input',e=>{if(!e.target.classList.contains('efv'))return;let v=e.target.value.replace(/\D/g,'').replace(/^0+/,'');if(+v>15)v='15';e.target.value=v});
+$('#chItem').onclick=()=>{$('#typeDlg').close();openPost()};
+$('#chYang').onclick=()=>{$('#typeDlg').close();openYang()};
+$('#typeClose').onclick=()=>$('#typeDlg').close();
+$('#yGo').onclick=yangSubmit;$('#yClose').onclick=()=>$('#yangDlg').close();
+['yAmt','yPrice'].forEach(id=>$('#'+id).addEventListener('input',yCalc));$('#yUnit').onchange=yCalc;
+$('#fbBtn').onclick=()=>openFeedback();$('#fbLink').onclick=()=>openFeedback();
+$('#fbGo').onclick=fbSubmit;$('#fbClose').onclick=()=>$('#fbDlg').close();
 initCatalog();
 </script>
 </body>
