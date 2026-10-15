@@ -73,6 +73,14 @@ dialog h2{font-family:Cinzel,Georgia,serif;font-size:1.2rem;color:var(--gold2);m
 #toast.on{opacity:1}
 .notice{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:rgba(224,166,58,.1);border:1px solid var(--gold);border-radius:12px;padding:10px 12px;font-size:.85rem;margin:12px 0}
 .efv{text-align:center}
+.card .head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.card .head h3{display:block;font-size:1.1rem;line-height:1.35}
+.head .tag.plus{margin-left:6px;padding:1px 8px;font-size:.85rem;vertical-align:middle}
+.efl{list-style:none;display:grid;gap:3px}
+.efl li{display:flex;gap:8px;color:var(--gold2);font-weight:600;font-size:.92rem}
+.efl .n{opacity:.65;min-width:1.5em}
+.who{display:grid;gap:2px;font-size:.88rem;color:var(--mute)}
+.who b{color:var(--text);font-weight:700}
 footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
 @media(min-width:720px){.grid{grid-template-columns:1fr 1fr}.filters{grid-template-columns:2fr 2fr 1fr 1fr 1fr}.filters .full{grid-column:auto}.hero h1{font-size:2.2rem}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -314,23 +322,25 @@ async function load(reset){
 }
 function card(i){
   cache.set(String(i.id),i);
-  const efs=[1,2,3,4,5].map(n=>i['efsun_'+n]).filter(Boolean).map(e=>`<span class="tag">${esc(e)}</span>`).join('');
+  const efs=[1,2,3,4,5].map(n=>i['efsun_'+n]).filter(Boolean).map((e,k)=>{
+    const m=e.match(/^(.*) (\+\d+)$/);
+    return `<li><span class="n">${k+1}.</span><span>${esc(m?m[1]:e)}${m?` <b>${esc(m[2])}</b>`:''}</span></li>`}).join('');
   const ms=new Date(i.expires_at)-Date.now(),expired=ms<=0,sold=i.status==='sold';
   const m=i.item_name.match(/^(.*)\s(\+\d+)$/),plus=m?m[2]:'',base=m?m[1]:i.item_name;
   const price=i.price_value!=null?`${Number(i.price_value).toLocaleString('tr-TR')} ${esc(i.currency||'')}`:esc(i.price||'');
   const mine=user&&user.id===i.user_id;
   const status=sold?'<span class="tag st">Satıldı</span>':expired?'<span class="tag st">Süresi doldu</span>':'';
   const left=Math.ceil(ms/36e5);
-  const who=[i.seller_name?`<b>${esc(i.seller_name)}</b>`:'',i.contact_info?esc(i.contact_info):''].filter(Boolean).join(' · ')||'İletişim bilgisi yok';
+  const who=(i.seller_name?`<span>Karakter adı: <b>${esc(i.seller_name)}</b></span>`:'')+(i.contact_info?`<span>İletişim: <b>${esc(i.contact_info)}</b></span>`:'');
   const acts=mine
     ?`<button class="btn sm" data-act="edit" data-id="${i.id}">Düzenle</button>${!sold&&!expired?`<button class="btn sm ok" data-act="sold" data-id="${i.id}">Satıldı</button>`:`<button class="btn sm ok" data-act="renew" data-id="${i.id}">Yenile</button>`}<button class="btn sm bad" data-act="del" data-id="${i.id}">Sil</button>`
     :(i.seller_name?`<button class="btn sm gold" data-act="copy" data-nick="${esc(i.seller_name)}">/w kopyala</button>`:'');
   return `<article class="card ${sold?'sold':''} ${expired?'exp':''}">
-    <h3><span>${esc(base)}</span><span class="price">${price}</span></h3>
-    <div class="tags">${plus?`<span class="tag plus">${esc(plus)}</span>`:''}${i.category?`<span class="tag">${esc(i.category)}</span>`:''}${status}</div>
-    ${efs?`<div class="tags">${efs}</div>`:''}
-    <div class="seller">${who}</div>
-    <div class="foot"><span>${new Date(i.created_at).toLocaleDateString('tr-TR')}${!sold&&!expired?` · ${left} saat kaldı`:''}</span><div class="acts">${acts}</div></div>
+    <div class="head"><h3>${esc(base)}${plus?` <span class="tag plus">${esc(plus)}</span>`:''}</h3><span class="price">${price}</span></div>
+    ${status?`<div class="tags">${status}</div>`:''}
+    <ol class="efl">${efs}</ol>
+    <div class="who">${who||'<span>İletişim bilgisi yok</span>'}</div>
+    <div class="foot"><span>${esc(i.category||'')} · ${new Date(i.created_at).toLocaleDateString('tr-TR')}${!sold&&!expired?` · ${left} saat kaldı`:''}</span><div class="acts">${acts}</div></div>
   </article>`;
 }
 
