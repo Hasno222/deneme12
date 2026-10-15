@@ -81,6 +81,9 @@ dialog h2{font-family:Cinzel,Georgia,serif;font-size:1.2rem;color:var(--gold2);m
 .efl .n{opacity:.65;min-width:1.5em}
 .who{display:grid;gap:2px;font-size:.88rem;color:var(--mute)}
 .who b{color:var(--text);font-weight:700}
+.ef.x{grid-template-columns:2fr 1fr auto}
+.stn{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:.8rem;color:var(--mute)}
+.stn .tag{color:#9cc2ff;border-color:#35507f}
 footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
 @media(min-width:720px){.grid{grid-template-columns:1fr 1fr}.filters{grid-template-columns:2fr 2fr 1fr 1fr 1fr}.filters .full{grid-column:auto}.hero h1{font-size:2.2rem}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -152,9 +155,15 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
   </div>
   <label for="pName">İtem</label>
   <select id="pName"></select>
-  <label>Efsunlar (en az 2, en fazla 5)</label>
+  <label>Efsunlar (1. ve 2. zorunlu)</label>
   <div id="efRows"></div>
-  <p class="hint">Efsun değeri 1 ile 15 arasında bir sayı olmalı.</p>
+  <button class="btn sm" id="addEf" type="button" style="margin-top:8px">+ Efsun ekle</button>
+  <p class="hint">Efsun değeri 1 ile 15 arasında bir sayı olmalı. En fazla 6 efsun eklenebilir.</p>
+  <div id="stoneBox" class="hide">
+    <label>Taşlar (isteğe bağlı, en fazla 4)</label>
+    <div id="stRows"></div>
+    <button class="btn sm" id="addSt" type="button" style="margin-top:8px">+ Taş ekle</button>
+  </div>
   <div class="two">
     <div><label for="pPrice">Fiyat</label><input id="pPrice" type="number" min="1" max="999999999999" step="any" inputmode="decimal" placeholder="Örn: 30"></div>
     <div><label for="pCur">Para birimi</label><select id="pCur"></select></div>
@@ -188,7 +197,8 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const PAGE=12, FREE_LIMIT=2;
 const CURS=['TL','Yang'];
 const PLUS=['+9','+8','+7','+6','+5','+4','+3','+2','+1','+0'];
-let CATALOG=[], EFSUN=[], active=0, editId=null;
+let CATALOG=[], EFSUN=[], STONES=[], active=0, editId=null, efShown=2;
+const STONE_CATS=['Silah','Zırh'];
 const cache=new Map();
 
 const $=s=>document.querySelector(s);
@@ -204,13 +214,46 @@ function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');
 $('#fPlus').innerHTML=opts(PLUS,'Hepsi');$('#pPlus').innerHTML=opts(PLUS);
 $('#fCur').innerHTML=opts(CURS,'Hepsi');$('#pCur').innerHTML=opts(CURS);
 async function initCatalog(){
-  const [a,b]=await Promise.all([sb.from('item_catalog').select('category,name').order('name'),sb.from('efsun_catalog').select('name').order('name')]);
-  if(a.error||b.error){toast('Katalog yüklenemedi. supabase.sql dosyasını çalıştırdın mı?');return}
-  CATALOG=a.data;EFSUN=b.data.map(x=>x.name);
+  const [a,b,c]=await Promise.all([sb.from('item_catalog').select('category,name').order('name'),sb.from('efsun_catalog').select('name').order('name'),sb.from('stone_catalog').select('name').order('name')]);
+  if(a.error||b.error||c.error){toast('Katalog yüklenemedi. supabase.sql dosyasını çalıştırdın mı?');return}
+  CATALOG=a.data;EFSUN=b.data.map(x=>x.name);STONES=c.data.map(x=>x.name);
   const cats=[...new Set(CATALOG.map(x=>x.category))].sort((x,y)=>x.localeCompare(y,'tr'));
   $('#fCat').innerHTML=opts(cats,'Hepsi');$('#pCat').innerHTML=opts(cats,'Kategori seç');
   fillNames();
-  $('#efRows').innerHTML=[1,2,3,4,5].map(i=>`<div class="ef"><select id="ef${i}n" aria-label="Efsun ${i}">${opts(EFSUN,'Efsun '+i+(i>2?' (isteğe bağlı)':' (zorunlu)'))}</select><input id="ef${i}v" class="efv" type="text" inputmode="numeric" maxlength="2" placeholder="1-15" autocomplete="off" aria-label="Efsun ${i} değeri"></div>`).join('');
+  $('#efRows').innerHTML=[1,2,3,4,5,6].map(i=>`<div class="ef${i>2?' x':''}" id="efr${i}"><select id="ef${i}n" aria-label="Efsun ${i}">${opts(EFSUN,'Efsun '+i+(i>2?'':' (zorunlu)'))}</select><input id="ef${i}v" class="efv" type="text" inputmode="numeric" maxlength="2" placeholder="1-15" autocomplete="off" aria-label="Efsun ${i} değeri">${i>2?`<button class="btn sm bad" type="button" data-rm="${i}" aria-label="Efsunu kaldır">×</button>`:''}</div>`).join('');
+  efLayout();
+}
+function efLayout(){
+  for(let n=1;n<=6;n++){const r=$('#efr'+n);if(r)r.classList.toggle('hide',n>efShown)}
+  $('#addEf').classList.toggle('hide',efShown>=6);
+}
+function setEfsuns(item){
+  const vals=[];
+  if(item)for(let n=1;n<=6;n++){const e=(item['efsun_'+n]||'').match(/^(.*) \+(\d+)$/);if(e)vals.push(e)}
+  efShown=Math.max(2,vals.length);
+  for(let n=1;n<=6;n++){const e=vals[n-1];$(`#ef${n}n`).value=e?e[1]:'';$(`#ef${n}v`).value=e?e[2]:''}
+  efLayout();
+}
+function efRemove(k){
+  const vals=[];
+  for(let n=1;n<=efShown;n++)if(n!==k)vals.push([$(`#ef${n}n`).value,$(`#ef${n}v`).value]);
+  efShown--;
+  for(let n=1;n<=6;n++){const v=vals[n-1]||['',''];$(`#ef${n}n`).value=v[0];$(`#ef${n}v`).value=v[1]}
+  efLayout();
+}
+function stLayout(){$('#addSt').classList.toggle('hide',$('#stRows').children.length>=4)}
+function toggleStone(){
+  const on=STONE_CATS.includes($('#pCat').value);
+  $('#stoneBox').classList.toggle('hide',!on);
+  if(!on)$('#stRows').innerHTML='';
+  stLayout();
+}
+function addStone(n,v){
+  if($('#stRows').children.length>=4)return;
+  const d=document.createElement('div');d.className='ef x';
+  d.innerHTML=`<select class="sn" aria-label="Taş">${opts(STONES,'Taş seç')}</select><select class="sv" aria-label="Taş artısı">${opts(['+1','+2','+3','+4'])}</select><button class="btn sm bad" type="button" data-rmst aria-label="Taşı kaldır">×</button>`;
+  d.querySelector('.sn').value=n||'';if(v)d.querySelector('.sv').value=v;
+  $('#stRows').appendChild(d);stLayout();
 }
 function fillNames(){const c=$('#pCat').value;$('#pName').innerHTML=opts(CATALOG.filter(x=>x.category===c).map(x=>x.name),c?'İtem seç':'Önce kategori seç')}
 async function refreshQuota(){
@@ -299,7 +342,7 @@ async function load(reset){
 
   const name=clean($('#fName').value),ef=clean($('#fEfsun').value);
   if(name)q=q.ilike('item_name',`%${name}%`);
-  if(ef)q=q.or(['efsun_1','efsun_2','efsun_3','efsun_4','efsun_5'].map(c=>`${c}.ilike.%${ef}%`).join(','));
+  if(ef)q=q.or(['efsun_1','efsun_2','efsun_3','efsun_4','efsun_5','efsun_6'].map(c=>`${c}.ilike.%${ef}%`).join(','));
   if($('#fCat').value)q=q.eq('category',$('#fCat').value);
   if($('#fPlus').value)q=q.ilike('item_name',`%${$('#fPlus').value}`);
   if($('#fCur').value)q=q.eq('currency',$('#fCur').value);
@@ -322,7 +365,7 @@ async function load(reset){
 }
 function card(i){
   cache.set(String(i.id),i);
-  const efs=[1,2,3,4,5].map(n=>i['efsun_'+n]).filter(Boolean).map((e,k)=>{
+  const efs=[1,2,3,4,5,6].map(n=>i['efsun_'+n]).filter(Boolean).map((e,k)=>{
     const m=e.match(/^(.*) (\+\d+)$/);
     return `<li><span class="n">${k+1}.</span><span>${esc(m?m[1]:e)}${m?` <b>${esc(m[2])}</b>`:''}</span></li>`}).join('');
   const ms=new Date(i.expires_at)-Date.now(),expired=ms<=0,sold=i.status==='sold';
@@ -331,6 +374,7 @@ function card(i){
   const mine=user&&user.id===i.user_id;
   const status=sold?'<span class="tag st">Satıldı</span>':expired?'<span class="tag st">Süresi doldu</span>':'';
   const left=Math.ceil(ms/36e5);
+  const stn=(i.stones&&i.stones.length)?`<div class="stn">💎 Taşlar: ${i.stones.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>`:'';
   const who=(i.seller_name?`<span>Karakter adı: <b>${esc(i.seller_name)}</b></span>`:'')+(i.contact_info?`<span>İletişim: <b>${esc(i.contact_info)}</b></span>`:'');
   const acts=mine
     ?`<button class="btn sm" data-act="edit" data-id="${i.id}">Düzenle</button>${!sold&&!expired?`<button class="btn sm ok" data-act="sold" data-id="${i.id}">Satıldı</button>`:`<button class="btn sm ok" data-act="renew" data-id="${i.id}">Yenile</button>`}<button class="btn sm bad" data-act="del" data-id="${i.id}">Sil</button>`
@@ -338,7 +382,7 @@ function card(i){
   return `<article class="card ${sold?'sold':''} ${expired?'exp':''}">
     <div class="head"><h3>${esc(base)}${plus?` <span class="tag plus">${esc(plus)}</span>`:''}</h3><span class="price">${price}</span></div>
     ${status?`<div class="tags">${status}</div>`:''}
-    <ol class="efl">${efs}</ol>
+    <ol class="efl">${efs}</ol>${stn}
     <div class="who">${who||'<span>İletişim bilgisi yok</span>'}</div>
     <div class="foot"><span>${esc(i.category||'')} · ${new Date(i.created_at).toLocaleDateString('tr-TR')}${!sold&&!expired?` · ${left} saat kaldı`:''}</span><div class="acts">${acts}</div></div>
   </article>`;
@@ -354,16 +398,17 @@ async function openPost(item){
   $('#postErr').textContent='';
   $('#postTitle').textContent=item?'İlanı düzenle':'Yeni ilan';
   $('#postGo').textContent=item?'Kaydet ve yeniden yayınla':'Yayınla';
+  $('#stRows').innerHTML='';
   if(item){
-    $('#pCat').value=item.category;fillNames();
+    $('#pCat').value=item.category;fillNames();toggleStone();
     const m=item.item_name.match(/^(.*)\s(\+\d+)$/);
     $('#pName').value=m?m[1]:'';$('#pPlus').value=m?m[2]:'+0';
-    for(let n=1;n<=5;n++){const e=(item['efsun_'+n]||'').match(/^(.*) \+(\d+)$/);$(`#ef${n}n`).value=e?e[1]:'';$(`#ef${n}v`).value=e?e[2]:''}
+    setEfsuns(item);
+    (item.stones||[]).forEach(x=>{const t=x.match(/^(.*) (\+\d)$/);if(t)addStone(t[1],t[2])});
     $('#pPrice').value=item.price_value??'';$('#pCur').value=item.currency||'TL';
     $('#pNick').value=item.seller_name||'';$('#pContact').value=item.contact_info||'';$('#pDur').value=item.duration_hours||24;
   }else{
-    $('#pCat').value='';fillNames();$('#pPlus').selectedIndex=0;
-    for(let n=1;n<=5;n++){$(`#ef${n}n`).value='';$(`#ef${n}v`).value=''}
+    $('#pCat').value='';fillNames();toggleStone();$('#pPlus').selectedIndex=0;setEfsuns(null);
     ['#pPrice','#pNick','#pContact'].forEach(x=>$(x).value='');$('#pCur').selectedIndex=0;$('#pDur').value='24';
   }
   $('#postDlg').showModal();
@@ -375,17 +420,22 @@ async function postSubmit(){
   if(!cat||!base){err.textContent='Kategori ve item seçmelisin.';return}
   const row={category:cat,item_name:`${base} ${$('#pPlus').value}`,price_value:price,currency:$('#pCur').value,
     price:`${price} ${$('#pCur').value}`,seller_name:nick,contact_info:contact,duration_hours:+$('#pDur').value,status:'active'};
-  const seen=new Set();let cnt=0;
-  for(let n=1;n<=5;n++){
-    const nm=$(`#ef${n}n`).value,v=$(`#ef${n}v`).value.trim();
+  const seen=new Set();
+  for(let n=1;n<=6;n++){
     row['efsun_'+n]=null;
-    if(!nm&&!v)continue;
-    if(!nm){err.textContent=`Efsun ${n} için efsun adı seç.`;return}
-    if(!/^\d{1,2}$/.test(v)||+v<1||+v>15){err.textContent=`Efsun ${n} değeri 1 ile 15 arasında bir sayı olmalı.`;return}
+    if(n>efShown)continue;
+    const nm=$(`#ef${n}n`).value,v=$(`#ef${n}v`).value.trim();
+    if(!nm){err.textContent=`${n}. efsunu seç${n>2?' ya da × ile kaldır':''}.`;return}
+    if(!/^\d{1,2}$/.test(v)||+v<1||+v>15){err.textContent=`${n}. efsun değeri 1 ile 15 arasında bir sayı olmalı.`;return}
     if(seen.has(nm)){err.textContent='Aynı efsunu iki kez seçtin.';return}
-    seen.add(nm);cnt++;row['efsun_'+n]=`${nm} +${+v}`;
+    seen.add(nm);row['efsun_'+n]=`${nm} +${+v}`;
   }
-  if(cnt<2){err.textContent='İlan için en az 2 efsun seçmelisin.';return}
+  row.stones=[];
+  for(const r of $('#stRows').children){
+    const nm=r.querySelector('.sn').value;
+    if(!nm){err.textContent='Taş seç ya da × ile kaldır.';return}
+    row.stones.push(`${nm} ${r.querySelector('.sv').value}`);
+  }
   if(!(price>0)){err.textContent='Geçerli bir fiyat gir.';return}
   if(nick&&nick.length<2){err.textContent='Karakter adı en az 2 karakter olmalı.';return}
   if(contact&&(contact.length<3||/https?:|www\.|\.com|\.net/i.test(contact))){err.textContent='İletişim en az 3 karakter olmalı ve bağlantı içermemeli.';return}
@@ -432,7 +482,11 @@ $('#moreBtn').onclick=()=>{page++;load(false)};
 ['fName','fEfsun'].forEach(id=>$('#'+id).addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>load(true),350)}));
 ['fCat','fPlus','fSort','fCur'].forEach(id=>$('#'+id).addEventListener('change',()=>load(true)));
 $('#resetBtn').onclick=()=>{['fName','fEfsun','fCat','fPlus','fCur'].forEach(id=>$('#'+id).value='');$('#fSort').value='new';load(true)};
-$('#pCat').onchange=fillNames;
+$('#pCat').onchange=()=>{fillNames();toggleStone()};
+$('#addEf').onclick=()=>{if(efShown<6){efShown++;efLayout()}};
+$('#addSt').onclick=()=>addStone();
+$('#efRows').addEventListener('click',e=>{const b=e.target.closest('[data-rm]');if(b)efRemove(+b.dataset.rm)});
+$('#stRows').addEventListener('click',e=>{if(e.target.closest('[data-rmst]')){e.target.closest('.ef').remove();stLayout()}});
 $('#moreSlots').onclick=()=>$('#limitDlg').showModal();
 $('#limitClose').onclick=()=>$('#limitDlg').close();
 $('#efRows').addEventListener('input',e=>{if(!e.target.classList.contains('efv'))return;let v=e.target.value.replace(/\D/g,'').replace(/^0+/,'');if(+v>15)v='15';e.target.value=v});
