@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Mobile2 Global Pazar: Metin2 item ve efsun ilanlarını ara, ilan ver, satıcıyla iletişime geç.">
 <meta name="theme-color" content="#0e1320">
+<meta property="og:title" content="Mobile2 Global Pazar">
+<meta property="og:description" content="Mobile2 Global item, efsun ve yang ilanları. Sunucuna göre ara, ilan ver.">
+<meta property="og:type" content="website">
+<meta name="robots" content="index,follow">
 <title>Mobile2 Global Pazar</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -94,6 +98,14 @@ textarea:focus{border-color:var(--gold);outline:none}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 .link{border:none;background:none;color:var(--mute);text-decoration:underline;cursor:pointer;padding:0}
 @media(max-width:560px){#authBar .seller{display:none}}
+.lnk{background:none;border:none;color:var(--mute);text-decoration:underline;cursor:pointer;font-size:.75rem;padding:2px}
+.lnk:hover{color:var(--gold2)}
+.legal{font-size:.88rem;color:var(--mute);line-height:1.55;max-height:60vh;overflow:auto}
+.legal b{color:var(--text)}.legal li{margin:6px 0 6px 18px}.legal p{margin:8px 0}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;grid-column:1/-1}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;font-size:.8rem;color:var(--mute)}
+.stat b{display:block;font-size:1.5rem;color:var(--gold2)}
+#mkt{margin:0 0 10px;font-size:.85rem}
 footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
 @media(min-width:720px){.grid{grid-template-columns:1fr 1fr}.filters{grid-template-columns:2fr 2fr 1fr 1fr 1fr}.filters .full{grid-column:auto}.hero h1{font-size:2.2rem}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -101,24 +113,28 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <div class="brand">⚔️ Mobile2 Pazar<small>Item ve efsun ilanları</small></div>
+  <div class="brand"><span id="brandTxt">⚔️ Mobile2 Pazar</span><small id="brandSub">Item ve efsun ilanları</small></div>
   <div style="display:flex;gap:6px;align-items:center"><button class="btn sm" id="fbBtn" aria-label="Geri bildirim gönder">💬 Geri bildirim</button><div id="authBar"></div></div>
 </div></header>
 
+<div id="maint" class="hide" style="position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;align-items:center;justify-content:center;text-align:center;padding:20px"><div style="max-width:420px"><h1 style="font-size:1.6rem;color:var(--gold2)">🛠 Bakımdayız</h1><p id="maintTxt" style="color:var(--mute);margin:10px 0 16px">Site kısa süreliğine bakımda.</p><button class="btn sm" id="maintLogin">Yönetici girişi</button></div></div>
+<div class="notice hide" id="maintAdmin" style="margin:0;border-radius:0;justify-content:center">🛠 Bakım modu AÇIK: ziyaretçiler siteyi göremiyor, sadece sen görüyorsun.</div>
+<div class="notice hide" id="siteNotice" style="margin:0;border-radius:0;justify-content:center"></div>
 <main class="wrap">
   <section class="hero">
-    <h1>Aradığın efsunlu itemi bul.</h1>
-    <p>İtem adına, efsuna, artıya ve fiyata göre ara. İlanlar 24 veya 48 saat yayında kalır.</p>
-    <div class="notice"><span>🎮 Bu pazar şu an <b>sadece Mobile2 Global</b> için hazırlandı. İleride başka oyunlar da eklenecek. Başka bir oyundan geliyorsan takipte kal.</span></div>
+    <h1 id="heroH">Aradığın efsunlu itemi bul.</h1>
+    <p id="heroP">İtem adına, efsuna, artıya ve fiyata göre ara. İlanlar 24 veya 48 saat yayında kalır.</p>
+    <div class="notice"><span id="gameN">🎮 Bu pazar şu an <b>sadece Mobile2 Global</b> için hazırlandı. İleride başka oyunlar da eklenecek. Başka bir oyundan geliyorsan takipte kal.</span></div>
   </section>
 
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" id="tabItems" aria-selected="true">⚔️ İtem</button>
     <button class="tab" role="tab" id="tabYang" aria-selected="false">💰 Yang</button>
     <button class="tab hide" role="tab" id="tabMine" aria-selected="false">İlanlarım</button>
+    <button class="tab hide" role="tab" id="tabAdmin" aria-selected="false">🛡 Yönetim paneli</button>
   </div>
 
-  <div class="notice hide" id="quotaBar"><span id="quotaTxt"></span><button class="btn sm" id="moreSlots">Daha fazla ilan · Yakında</button></div>
+  <div class="notice hide" id="quotaBar"><span id="quotaTxt"></span><button class="btn sm" id="moreSlots">📦 Paketler</button></div>
 
   <div class="filters" id="fItems">
     <div class="full"><label for="fName">İtem adı</label><input id="fName" placeholder="Örn: Zehir Kılıcı" autocomplete="off"></div>
@@ -137,9 +153,12 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
   </div>
 
   <div class="meta"><span id="count"></span><button class="btn sm" id="resetBtn">Filtreleri temizle</button></div>
+  <div class="notice hide" id="mkt"></div>
+  <button class="btn gold hide" id="freshBar" style="width:100%;margin-bottom:10px"></button>
   <div id="list" class="grid"></div>
   <div style="text-align:center;margin-top:14px"><button class="btn hide" id="moreBtn">Daha fazla göster</button></div>
-  <footer>Mobile2 Global için hazırlandı. Oyun içi alışverişte dikkatli ol: kimseye şifreni verme, ödemeyi item teslimatıyla birlikte yap.<br><button class="btn sm" id="fbLink" style="margin-top:10px">💬 Sorun bildir / öneri gönder</button></footer>
+  <footer><span id="footTxt">Mobile2 Global için hazırlandı. Oyun içi alışverişte dikkatli ol: kimseye şifreni verme, ödemeyi item teslimatıyla birlikte yap.</span><br><button class="btn sm" id="fbLink" style="margin-top:10px">💬 Sorun bildir / öneri gönder</button>
+  <div style="margin-top:10px"><button class="lnk" data-legal="terms">Kullanım şartları</button> · <button class="lnk" data-legal="privacy">Gizlilik</button> · <button class="lnk" data-legal="safety">Güvenlik ipuçları</button></div></footer>
 </main>
 
 <button class="btn gold fab" id="newBtn">+ İlan ver</button>
@@ -155,6 +174,7 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
   <div id="emailRow"><label for="email">E-posta</label><input id="email" type="email" autocomplete="email"></div>
   <div><label for="pass" id="passLbl">Şifre</label><input id="pass" type="password" autocomplete="current-password" minlength="6"></div>
   <p class="hint">Şifre en az 6 karakter olmalı.</p>
+  <label id="consentRow" class="hide" style="display:flex;gap:8px;align-items:flex-start;color:var(--text)"><input type="checkbox" id="consent" style="width:auto;margin-top:3px"><span><button class="lnk" data-legal="terms" type="button" style="font-size:.85rem">Kullanım şartlarını</button> ve <button class="lnk" data-legal="privacy" type="button" style="font-size:.85rem">gizlilik bilgilendirmesini</button> okudum, kabul ediyorum.</span></label>
   <p class="err" id="authErr"></p>
   <div class="two" style="margin-top:10px">
     <button class="btn" id="authClose">Vazgeç</button>
@@ -254,10 +274,16 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
 </dialog>
 
 <dialog id="limitDlg">
-  <h2>Ücretsiz ilan hakkın doldu</h2>
-  <p class="hint" style="font-size:.9rem">Aynı anda en fazla 2 aktif ilanın olabilir. Bir ilanı "Satıldı" yapabilir, silebilir ya da süresinin bitmesini bekleyebilirsin.</p>
-  <div class="notice">⭐ <span>Daha fazla ilan hakkı için küçük ücretli paketler çok yakında geliyor.</span></div>
-  <button class="btn gold" id="limitClose" style="width:100%;margin-top:6px">Tamam</button>
+  <h2>İlan hakkı ve paketler</h2>
+  <p class="hint" id="limTxt" style="font-size:.9rem"></p>
+  <div id="planList"></div>
+  <button class="btn gold" id="limitClose" style="width:100%;margin-top:10px">Tamam</button>
+</dialog>
+
+<dialog id="legalDlg">
+  <h2 id="legalTitle"></h2>
+  <div id="legalBody" class="legal"></div>
+  <button class="btn gold" id="legalClose" style="width:100%;margin-top:12px">Tamam</button>
 </dialog>
 
 <script>
@@ -265,7 +291,7 @@ const SUPABASE_URL='https://bgugtvlixerwlhrgqmfw.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_V11Gt6rJmKP90QQ4G7L-ag_1NpCea-i';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
-const PAGE=12, FREE_LIMIT=2;
+const PAGE=12;let FREE_LIMIT=2;
 const CURS=['TL','Yang'];
 const SERVERS=['Alesta','Tramola','Tuva','Yakamoz'];
 const UNITS=['Won','KK'];
@@ -347,9 +373,12 @@ function addStone(n,v){
 function fillNames(){const c=$('#pCat').value;$('#pName').innerHTML=opts(CATALOG.filter(x=>x.category===c).map(x=>x.name),c?'İtem seç':'Önce kategori seç')}
 async function refreshQuota(){
   if(!user){active=0;$('#quotaBar').classList.add('hide');return}
-  const {count}=await sb.from('items').select('id',{count:'exact',head:true}).eq('user_id',user.id).eq('status','active').gt('expires_at',new Date().toISOString());
-  active=count||0;
-  $('#quotaTxt').textContent=`Aktif ilanların: ${active}/${FREE_LIMIT}`;
+  const now=new Date().toISOString();
+  const c=t=>sb.from(t).select('id',{count:'exact',head:true}).eq('user_id',user.id).eq('status','active').gt('expires_at',now);
+  const [a,b,l]=await Promise.all([c('items'),c('yang_listings'),sb.rpc('my_limit')]);
+  active=(a.count||0)+(b.count||0);
+  if(typeof l.data==='number')FREE_LIMIT=l.data;
+  $('#quotaTxt').textContent=`Aktif ilanların: ${active}/${FREE_LIMIT} (item + yang)`;
   $('#quotaBar').classList.toggle('hide',view!=='mine');
 }
 const dbErr=m=>/check constraint/i.test(m)?'Girdiğin bilgiler kurallara uymuyor. Alanları kontrol et.':m;
@@ -360,9 +389,11 @@ function renderAuth(){
     ?`<span class="seller" style="margin-right:8px">${esc(user.email)}</span><button class="btn sm" id="outBtn">Çıkış</button>`
     :`<button class="btn sm gold" id="inBtn">Giriş / Kayıt</button>`;
   $('#tabMine').classList.toggle('hide',!user);
+  $('#tabAdmin').classList.toggle('hide',!isAdmin);
+  applyCfg();
   if(!user&&view==='mine'){setView('items');return}
 }
-function setUser(u){user=u;renderAuth();load(true)}
+async function setUser(u){user=u;isAdmin=false;renderAuth();if(u){try{const {data}=await sb.rpc('is_admin');isAdmin=data===true}catch{}renderAuth()}load(true)}
 sb.auth.getSession().then(({data})=>setUser(data.session?.user||null));
 sb.auth.onAuthStateChange((ev,s)=>{
   if(ev==='PASSWORD_RECOVERY'){recovery=true;openAuth('recover')}
@@ -375,6 +406,7 @@ function openAuth(mode){
   $('#authModes').classList.toggle('hide',rec);
   $('#emailRow').classList.toggle('hide',rec);
   $('#forgot').classList.toggle('hide',rec);
+  $('#consentRow').classList.toggle('hide',mode!=='up');
   document.querySelectorAll('#authModes .tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.mode===mode));
   $('#authTitle').textContent=rec?'Yeni şifre belirle':mode==='in'?'Giriş yap':'Kayıt ol';
   $('#passLbl').textContent=rec?'Yeni şifre':'Şifre';
@@ -386,6 +418,8 @@ async function authSubmit(){
   err.textContent='';
   if(authMode!=='recover'&&!/^\S+@\S+\.\S+$/.test(email)){err.textContent='Geçerli bir e-posta gir.';return}
   if(password.length<6){err.textContent='Şifre en az 6 karakter olmalı.';return}
+  if(authMode==='up'&&!cb('signups_open')){err.textContent='Yeni kayıtlar şu an kapalı.';return}
+  if(authMode==='up'&&!$('#consent').checked){err.textContent='Devam etmek için şartları kabul etmelisin.';return}
   btn.disabled=true;
   let r;
   if(authMode==='recover'){r=await sb.auth.updateUser({password});if(!r.error){recovery=false;toast('Şifren güncellendi.');$('#authDlg').close()}}
@@ -423,13 +457,13 @@ function setView(v){
   $('#tabMine').setAttribute('aria-selected',v==='mine');
   $('#fItems').classList.toggle('hide',v!=='items');
   $('#fYang').classList.toggle('hide',v!=='yang');
-  $('#resetBtn').classList.toggle('hide',v==='mine');
+  $('#resetBtn').classList.toggle('hide',v==='mine'||v==='admin');
   load(true);
 }
-let loadTok=0;
+let loadTok=0,fresh=0,isAdmin=false;
 async function load(reset){
   const tok=++loadTok;
-  if(reset){page=0;$('#list').innerHTML='<div class="skel"></div><div class="skel"></div>';$('#moreBtn').classList.add('hide')}
+  if(reset){page=0;fresh=0;$('#freshBar').classList.add('hide');$('#list').innerHTML='<div class="skel"></div><div class="skel"></div>';$('#moreBtn').classList.add('hide')}
   let html='',cnt=0,err=null;
   if(view==='mine'){
     if(!user)return;
@@ -475,6 +509,7 @@ async function load(reset){
   $('#count').textContent=total?`${total} ilan`:'';
   $('#moreBtn').classList.toggle('hide',view==='mine'||shown>=total);
   refreshQuota();
+  if(view==='yang'){if(reset)yangStats()}else $('#mkt').classList.add('hide');
 }
 function parts(i,k){
   cache.set(k+i.id,i);
@@ -485,7 +520,7 @@ function parts(i,k){
   const d=`data-k="${k}" data-id="${i.id}"`;
   const acts=mine
     ?`<button class="btn sm" data-act="edit" ${d}>Düzenle</button>${!sold&&!expired?`<button class="btn sm ok" data-act="sold" ${d}>Satıldı</button>`:`<button class="btn sm ok" data-act="renew" ${d}>Yenile</button>`}<button class="btn sm bad" data-act="del" ${d}>Sil</button>`
-    :`${i.seller_name?`<button class="btn sm gold" data-act="copy" data-nick="${esc(i.seller_name)}">/w kopyala</button>`:''}<button class="btn sm" data-act="report" ${d} aria-label="İlanı şikayet et">🚩</button>`;
+    :`${i.seller_name?`<button class="btn sm gold" data-act="copy" data-nick="${esc(i.seller_name)}">/w kopyala</button>`:''}<button class="btn sm" data-act="report" ${d} aria-label="İlanı şikayet et">🚩</button>${isAdmin?`<button class="btn sm bad" data-act="adel" ${d}>🛡 Sil</button><button class="btn sm bad" data-act="aban" ${d}>⛔ Yasakla</button>`:''}`;
   const left=!sold&&!expired?` · ${Math.ceil(ms/36e5)} saat kaldı`:'';
   return {expired,sold,tags,who,acts,left,date:new Date(i.created_at).toLocaleDateString('tr-TR')};
 }
@@ -521,7 +556,7 @@ async function openPost(item){
   if(!user){toast('İlan vermek için önce giriş yap.');openAuth('in');return}
   await refreshQuota();
   const live=item&&item.status==='active'&&new Date(item.expires_at)>new Date();
-  if(!live&&active>=FREE_LIMIT){$('#limitDlg').showModal();return}
+  if(!live&&active>=FREE_LIMIT){openLimit();return}
   editId=item?item.id:null;
   $('#postErr').textContent='';
   $('#postTitle').textContent=item?'İlanı düzenle':'Yeni ilan';
@@ -583,9 +618,10 @@ async function postSubmit(){
 
 /* ---------- Yeni ilan türü / Yang ---------- */
 async function openNew(){
+  if(!cb('posting_open')&&!isAdmin)return toast('Yeni ilan verme şu an geçici olarak kapalı. Biraz sonra tekrar dene.');
   if(!user){toast('İlan vermek için önce giriş yap.');openAuth('in');return}
   await refreshQuota();
-  if(active>=FREE_LIMIT){$('#limitDlg').showModal();return}
+  if(active>=FREE_LIMIT){openLimit();return}
   $('#typeDlg').showModal();
 }
 let yEditId=null;
@@ -593,7 +629,7 @@ async function openYang(item){
   if(!user){toast('İlan vermek için önce giriş yap.');openAuth('in');return}
   await refreshQuota();
   const live=item&&item.status==='active'&&new Date(item.expires_at)>new Date();
-  if(!live&&active>=FREE_LIMIT){$('#limitDlg').showModal();return}
+  if(!live&&active>=FREE_LIMIT){openLimit();return}
   yEditId=item?item.id:null;
   $('#yErr').textContent='';
   $('#yTitle').textContent=item?'Yang ilanını düzenle':'Yang satış ilanı';
@@ -627,12 +663,12 @@ async function yangSubmit(){
 
 /* ---------- Geri bildirim ---------- */
 let fbRef=null;
-function openFeedback(kind,ref){
+function openFeedback(kind,ref,msg){
   fbRef=ref||null;
   $('#fbKind').value=kind||'hata';$('#fbKind').disabled=!!ref;
-  $('#fbRefTxt').textContent=ref?`Şikayet edilen ilan: ${ref.replace('items:','İtem #').replace('yang_listings:','Yang #')}`:'';
+  $('#fbRefTxt').textContent=ref?(ref.startsWith('plan:')?'Paket talebi':`Şikayet edilen ilan: ${ref.replace('items:','İtem #').replace('yang_listings:','Yang #')}`):'';
   $('#fbRefTxt').classList.toggle('hide',!ref);
-  $('#fbMsg').value='';$('#fbErr').textContent='';$('#fbDlg').showModal();
+  $('#fbMsg').value=msg||'';$('#fbErr').textContent='';$('#fbDlg').showModal();
 }
 async function fbSubmit(){
   const err=$('#fbErr');err.textContent='';
@@ -642,7 +678,7 @@ async function fbSubmit(){
   let last=0;try{last=+localStorage.getItem('fbT')||0}catch{}
   if(Date.now()-last<30000){err.textContent='Lütfen biraz bekleyip tekrar dene.';return}
   $('#fbGo').disabled=true;
-  const {error}=await sb.from('feedback').insert([{kind:fbRef?'sikayet':$('#fbKind').value,message:msg,contact,ref:fbRef,page:location.href.slice(0,300),view,user_agent:navigator.userAgent.slice(0,300),last_error:lastErr||null}]);
+  const {error}=await sb.from('feedback').insert([{kind:fbRef?(fbRef.startsWith('plan:')?'diger':'sikayet'):$('#fbKind').value,message:msg,contact,ref:fbRef,page:location.href.slice(0,300),view,user_agent:navigator.userAgent.slice(0,300),last_error:lastErr||null}]);
   $('#fbGo').disabled=false;
   if(error){err.textContent='Gönderilemedi: '+error.message;return}
   try{localStorage.setItem('fbT',Date.now())}catch{}
@@ -658,12 +694,13 @@ $('#list').addEventListener('click',async e=>{
     catch{toast('Satıcı: '+b.dataset.nick)}
     return;
   }
+  if(ADMIN_ACTS.includes(act)){if(!isAdmin)return;return adminAct(b)}
   if(act==='edit')return k==='y'?openYang(cache.get('y'+id)):openPost(cache.get('i'+id));
   if(act==='report')return openFeedback('sikayet',`${T}:${id}`);
   if(act==='del'){ if(!confirm('Bu ilanı silmek istediğine emin misin?'))return;
     const {error}=await sb.from(T).delete().eq('id',id).eq('user_id',user.id);
     return error?toast('Silinemedi: '+error.message):(toast('İlan silindi.'),load(true)) }
-  if(act==='renew'){await refreshQuota();if(active>=FREE_LIMIT)return $('#limitDlg').showModal()}
+  if(act==='renew'){await refreshQuota();if(active>=FREE_LIMIT)return openLimit()}
   const patch=act==='sold'?{status:'sold'}:{status:'active',expires_at:nowIso()};
   const {error}=await sb.from(T).update(patch).eq('id',id).eq('user_id',user.id);
   error?toast(dbErr(error.message)):(toast(act==='sold'?'Satıldı olarak işaretlendi.':'İlan yeniden yayınlandı.'),load(true));
@@ -687,7 +724,7 @@ $('#addEf').onclick=()=>{if(efShown<6){efShown++;efLayout()}};
 $('#addSt').onclick=()=>addStone();
 $('#efRows').addEventListener('click',e=>{const b=e.target.closest('[data-rm]');if(b)efRemove(+b.dataset.rm)});
 $('#stRows').addEventListener('click',e=>{if(e.target.closest('[data-rmst]')){e.target.closest('.ef').remove();stLayout()}});
-$('#moreSlots').onclick=()=>$('#limitDlg').showModal();
+$('#moreSlots').onclick=()=>openLimit();
 $('#limitClose').onclick=()=>$('#limitDlg').close();
 $('#efRows').addEventListener('input',e=>{if(!e.target.classList.contains('efv'))return;let v=e.target.value.replace(/\D/g,'').replace(/^0+/,'');if(+v>15)v='15';e.target.value=v});
 $('#chItem').onclick=()=>{$('#typeDlg').close();openPost()};
@@ -697,7 +734,151 @@ $('#yGo').onclick=yangSubmit;$('#yClose').onclick=()=>$('#yangDlg').close();
 ['yAmt','yPrice'].forEach(id=>$('#'+id).addEventListener('input',yCalc));$('#yUnit').onchange=yCalc;
 $('#fbBtn').onclick=()=>openFeedback();$('#fbLink').onclick=()=>openFeedback();
 $('#fbGo').onclick=fbSubmit;$('#fbClose').onclick=()=>$('#fbDlg').close();
+/* ---------- Yönetim paneli ---------- */
+const ADMIN_ACTS=['adel','aban','fbdone','refdel','refban','unban'];
+async function banUser(uid,reason){
+  const {error}=await sb.from('banned_users').upsert({user_id:uid,reason:reason||null},{onConflict:'user_id'});
+  if(error)return error;
+  await Promise.all([sb.from('items').delete().eq('user_id',uid),sb.from('yang_listings').delete().eq('user_id',uid)]);
+  return null;
+}
+async function adminAct(b){
+  const {act,id,k,fb,ref,uid}=b.dataset,T=k==='y'?'yang_listings':'items';
+  const done=async()=>{if(fb)await sb.from('feedback').update({status:'cozuldu'}).eq('id',fb)};
+  const fin=m=>{toast(m);load(true)};
+  if(act==='fbdone'){await done();return fin('İşaretlendi.')}
+  if(act==='unban'){const {error}=await sb.from('banned_users').delete().eq('user_id',uid);return error?toast(error.message):fin('Yasak kaldırıldı.')}
+  if(act==='adel'){if(!confirm('Bu ilan yönetici olarak silinsin mi?'))return;const {error}=await sb.from(T).delete().eq('id',id);return error?toast(error.message):fin('İlan silindi.')}
+  if(act==='aban'){
+    const l=cache.get(k+id);if(!l)return;
+    if(l.user_id===user.id)return toast('Kendini yasaklayamazsın.');
+    const why=prompt('Yasaklama sebebi (isteğe bağlı). Kullanıcının tüm ilanları silinecek:');if(why===null)return;
+    const e=await banUser(l.user_id,why);return e?toast(e.message):fin('Kullanıcı yasaklandı.');
+  }
+  const [t,rid]=(ref||'').split(':');
+  if(!['items','yang_listings'].includes(t)||!/^\d+$/.test(rid||''))return toast('Geçersiz ilan bilgisi.');
+  if(act==='refdel'){
+    if(!confirm('İlan silinsin mi?'))return;
+    const {error}=await sb.from(t).delete().eq('id',rid);if(error)return toast(error.message);
+    await done();return fin('İlan silindi.');
+  }
+  const {data,error}=await sb.from(t).select('user_id').eq('id',rid).maybeSingle();
+  if(error||!data)return toast('İlan bulunamadı (zaten silinmiş olabilir). Bildirimi "Çözüldü" yapabilirsin.');
+  if(data.user_id===user.id)return toast('Kendini yasaklayamazsın.');
+  const why=prompt('Yasaklama sebebi (isteğe bağlı). Kullanıcının tüm ilanları silinecek:');if(why===null)return;
+  const e=await banUser(data.user_id,why);if(e)return toast(e.message);
+  await done();fin('Kullanıcı yasaklandı.');
+}
+
+/* ---------- Piyasa özeti (yang) ---------- */
+async function yangStats(){
+  let q=sb.from('yang_listings').select('unit,unit_price').eq('status','active').gt('expires_at',nowIso()).limit(500);
+  if($('#fySrv').value)q=q.eq('server',$('#fySrv').value);
+  const {data,error}=await q,box=$('#mkt');
+  if(view!=='yang')return;
+  if(error||!data||!data.length){box.classList.add('hide');return}
+  const by={};data.forEach(r=>{(by[r.unit]=by[r.unit]||[]).push(Number(r.unit_price))});
+  const row=([u,a])=>{a.sort((x,y)=>x-y);const m=a.length%2?a[(a.length-1)/2]:(a[a.length/2-1]+a[a.length/2])/2;
+    return `1 ${esc(u)}: en düşük <b>${fmt(a[0])}</b> · ortanca <b>${fmt(m)}</b> TL (${a.length} ilan)`};
+  box.innerHTML=`<span>📊 <b>Piyasa özeti${$('#fySrv').value?' · '+esc($('#fySrv').value):''}</b><br>${Object.entries(by).map(row).join('<br>')}</span>`;
+  box.classList.remove('hide');
+}
+
+/* ---------- Canlı yeni ilan bildirimi ---------- */
+function bump(v,p){
+  if(view!==v||(user&&p.new&&p.new.user_id===user.id))return;
+  fresh++;const b=$('#freshBar');b.textContent=`🔔 ${fresh} yeni ilan · Göster`;b.classList.remove('hide');
+}
+$('#freshBar').onclick=()=>load(true);
+try{
+  sb.channel('listings')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'items'},p=>bump('items',p))
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'yang_listings'},p=>bump('yang',p))
+    .subscribe();
+}catch{}
+
+/* ---------- Duyuru çubuğu (site_notice tablosundan) ---------- */
+(async()=>{try{
+  const {data}=await sb.from('site_notice').select('message').eq('active',true).order('id',{ascending:false}).limit(1);
+  const m=data&&data[0]&&data[0].message;
+  if(m&&sessionStorage.getItem('sn')!==m){
+    const n=$('#siteNotice');n.innerHTML=`<span>📢 ${esc(m)}</span><button class="btn sm" id="snX">Tamam</button>`;n.classList.remove('hide');
+    $('#snX').onclick=()=>{n.classList.add('hide');try{sessionStorage.setItem('sn',m)}catch{}};
+  }
+}catch{}})();
+
+/* ---------- Şartlar / gizlilik / güvenlik ---------- */
+const LEGAL={
+ terms:['Kullanım şartları',`<p>Bu site, <b>Mobile2 Global</b> oyuncularının item ve yang ilanlarını listelemesi için hazırlanmış bağımsız bir ilan platformudur. Oyunun yapımcısı veya yayıncısıyla bağlantısı yoktur; oyun ve marka adları sahiplerine aittir.</p>
+ <ul><li><b>Aracı değiliz.</b> Alım satım oyuncular arasında gerçekleşir. Ödeme ve teslimat bu sitede yapılmaz; yapılan işlemlerden doğan zararlardan platform sorumlu değildir.</li>
+ <li><b>Oyun kuralları.</b> Oyun içi ve oyun dışı ticaretin ilgili oyunun kurallarına uygunluğu kullanıcının sorumluluğundadır.</li>
+ <li><b>Yasaklar.</b> Sahte veya yanıltıcı ilan, dolandırıcılık, spam, reklam/bağlantı paylaşımı, hakaret ve taciz yasaktır.</li>
+ <li><b>Yaptırım.</b> Kurallara aykırı ilanlar uyarı yapılmadan silinebilir, tekrarında hesap kısıtlanabilir.</li>
+ <li><b>İlanlar.</b> İlanlar 24 veya 48 saat yayında kalır. Ücretsiz kullanımda aynı anda en fazla 2 aktif ilan verilebilir. Bu kurallar değişebilir.</li></ul>`],
+ privacy:['Gizlilik bilgilendirmesi',`<p>Hangi veriyi neden tuttuğumuzu açıkça yazıyoruz:</p>
+ <ul><li><b>E-posta ve şifre:</b> Hesap açmak ve giriş için. Şifren şifrelenmiş saklanır, bize görünmez.</li>
+ <li><b>İlan bilgileri:</b> Karakter adı ve iletişim bilgisi dahil, ilanla birlikte <b>herkese açık</b> görünür. Kişisel bilgilerini (telefon, adres vb.) yazma.</li>
+ <li><b>Geri bildirimler:</b> Gönderdiğin mesaj, sayfa bilgisi, cihaz türü ve varsa son hata, sorunu çözmek için saklanır.</li>
+ <li><b>Saklama yeri:</b> Veriler Supabase altyapısında tutulur. Verilerin satılmaz veya reklam amacıyla paylaşılmaz.</li>
+ <li><b>Silme talebi:</b> Hesabının ve ilanlarının silinmesi için "Geri bildirim" formundan bize yaz.</li></ul>`],
+ safety:['Güvenli alışveriş ipuçları',`<ul><li><b>Şifreni kimseyle paylaşma.</b> Yönetici dahil kimse senden oyun şifreni istemez.</li>
+ <li><b>Çok ucuz fiyata şüpheyle bak.</b> Piyasanın çok altındaki ilanlar çoğunlukla dolandırıcılıktır. Yang sekmesindeki piyasa özetine bak.</li>
+ <li><b>Küçük başla.</b> Tanımadığın biriyle ilk işlemde mümkünse küçük miktarla dene.</li>
+ <li><b>Önce teslimat, sonra ödeme veya eşzamanlı takas.</b> Peşin ödeme isteyenlere dikkat et.</li>
+ <li><b>Karakter adını kontrol et.</b> İlandaki karakter adıyla konuştuğun kişinin aynı olduğundan emin ol.</li>
+ <li><b>Şüpheli ilan gördün mü?</b> İlandaki 🚩 butonuyla bize bildir, bakalım.</li></ul>`]
+};
+function showLegal(k){$('#legalTitle').textContent=LEGAL[k][0];$('#legalBody').innerHTML=LEGAL[k][1];if(!$('#legalDlg').open)$('#legalDlg').showModal()}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-legal]');if(!b)return;e.preventDefault();showLegal(b.dataset.legal)});
+$('#legalClose').onclick=()=>$('#legalDlg').close();
+$('#tabAdmin').onclick=()=>{location.href='admin.html'};
+
+/* ---------- Site ayarları (yönetim panelinden) ---------- */
+let CFG={},PLAN_CACHE={};
+const cb=(k,d=true)=>CFG[k]===undefined?d:CFG[k]==='true';
+async function loadCfg(){
+  try{const {data}=await sb.from('site_settings').select('key,value');CFG={};(data||[]).forEach(r=>CFG[r.key]=r.value)}catch{}
+  applyCfg();
+}
+function applyCfg(){
+  const set=(id,k)=>{if(CFG[k])$(id).textContent=CFG[k]};
+  set('#brandTxt','site_title');set('#brandSub','site_subtitle');set('#heroH','hero_title');set('#heroP','hero_text');set('#gameN','game_notice');set('#footTxt','footer_text');
+  if(CFG.site_title)document.title=CFG.site_title.replace(/^[^\wÇĞİÖŞÜçğıöşü]+/,'');
+  const it=cb('items_enabled'),yg=cb('yang_enabled');
+  $('#tabItems').classList.toggle('hide',!it);$('#tabYang').classList.toggle('hide',!yg);
+  $('#chItem').classList.toggle('hide',!it);$('#chYang').classList.toggle('hide',!yg);
+  ['#fbBtn','#fbLink'].forEach(id=>$(id).classList.toggle('hide',!cb('feedback_enabled')));
+  const up=document.querySelector('#authModes [data-mode="up"]');if(up)up.classList.toggle('hide',!cb('signups_open'));
+  const m=cb('maintenance',false);
+  $('#maint').classList.toggle('hide',!(m&&!isAdmin));$('#maintAdmin').classList.toggle('hide',!(m&&isAdmin));
+  if(CFG.maintenance_msg)$('#maintTxt').textContent=CFG.maintenance_msg;
+  if(view==='items'&&!it&&yg)setView('yang');else if(view==='yang'&&!yg&&it)setView('items');
+}
+$('#maintLogin').onclick=()=>openAuth('in');
+
+/* ---------- İlan hakkı ve paketler ---------- */
+async function openLimit(){
+  $('#limTxt').textContent=`Şu an aynı anda ${FREE_LIMIT} aktif ilan verebilirsin. Bir ilanı "Satıldı" yapabilir, silebilir ya da süresinin bitmesini bekleyebilirsin.`;
+  $('#planList').innerHTML='<div class="skel" style="height:70px"></div>';
+  if(!$('#limitDlg').open)$('#limitDlg').showModal();
+  const [pl,mine]=await Promise.all([
+    sb.from('plans').select('*').eq('active',true).order('sort').order('listing_limit'),
+    user?sb.from('user_plans').select('expires_at,plans(name,listing_limit)').eq('user_id',user.id).gt('expires_at',nowIso()):Promise.resolve({data:[]})]);
+  PLAN_CACHE={};(pl.data||[]).forEach(p=>PLAN_CACHE[p.id]=p);
+  const have=(mine.data||[]).map(m=>`<div class="notice">✅ <span>Aktif paketin: <b>${esc(m.plans?m.plans.name:'')}</b> · ${new Date(m.expires_at).toLocaleDateString('tr-TR')} tarihine kadar</span></div>`).join('');
+  const list=(pl.data||[]).map(p=>`<div class="card" style="margin-top:8px"><div class="head"><h3>${esc(p.name)}</h3><span class="price">${esc(p.price_text||'')}</span></div><div class="seller">Aynı anda <b>${p.listing_limit}</b> aktif ilan · ${p.duration_days} gün</div>${p.description?`<div class="seller">${esc(p.description)}</div>`:''}<button class="btn sm gold" data-plan="${p.id}" style="align-self:flex-start">Bu paketi istiyorum</button></div>`).join('');
+  $('#planList').innerHTML=have+(list||'<div class="notice">⭐ <span>Ücretli paketler çok yakında geliyor.</span></div>')+(list&&CFG.packages_text?`<p class="hint">${esc(CFG.packages_text)}</p>`:'');
+}
+$('#planList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-plan]');if(!b)return;
+  const p=PLAN_CACHE[b.dataset.plan];if(!p)return;
+  $('#limitDlg').close();
+  if(!user){toast('Paket istemek için önce giriş yap.');openAuth('in');return}
+  openFeedback('diger','plan:'+p.id,`Paket talebi: ${p.name} (${p.price_text||'-'}). Ödeme ve aktifleştirme için benimle iletişime geçin.`);
+});
+
 initCatalog();
+loadCfg();
 </script>
 </body>
 </html>
