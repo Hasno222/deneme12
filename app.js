@@ -4,7 +4,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
 const PAGE=12;let FREE_LIMIT=2;
 const CURS=['TL','Yang'];
-const SERVERS=['Alesta','Tramola','Tuva','Yakamoz'];
+let SERVERS=['Alesta','Tramola','Tuva','Yakamoz'];
 const UNITS=['Won','KK'];
 const PLUS=['+9','+8','+7','+6','+5','+4','+3','+2','+1','+0'];
 let CATALOG=[], EFSUN=[], STONES=[], active=0, editId=null, efShown=2;
@@ -23,8 +23,9 @@ function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');
 /* ---------- Kurulum ---------- */
 $('#fPlus').innerHTML=opts(PLUS,'Hepsi');$('#pPlus').innerHTML=opts(PLUS);
 $('#fCur').innerHTML=opts(CURS,'Hepsi');$('#pCur').innerHTML=opts(CURS);
-$('#fSrv').innerHTML=opts(SERVERS,'Hepsi');$('#fySrv').innerHTML=opts(SERVERS,'Hepsi');
-$('#pSrv').innerHTML=opts(SERVERS,'Sunucu seç');$('#ySrv').innerHTML=opts(SERVERS,'Sunucu seç');
+function fillServers(){$('#fSrv').innerHTML=opts(SERVERS,'Hepsi');$('#fySrv').innerHTML=opts(SERVERS,'Hepsi');
+$('#pSrv').innerHTML=opts(SERVERS,'Sunucu seç');$('#ySrv').innerHTML=opts(SERVERS,'Sunucu seç')}
+fillServers();
 $('#fyUnit').innerHTML=opts(UNITS,'Hepsi');$('#yUnit').innerHTML=opts(UNITS);
 let lastErr='';
 addEventListener('error',e=>{lastErr=String(e.message||'').slice(0,200)});
@@ -33,20 +34,15 @@ const fmt=n=>Number(n).toLocaleString('tr-TR',{maximumFractionDigits:2});
 const nowIso=()=>new Date().toISOString();
 const prefSrv=()=>{try{return localStorage.getItem('srv')||''}catch{return ''}};
 const savePref=v=>{try{localStorage.setItem('srv',v)}catch{}};
-const contactErr=(n,c)=>{
-  if(n&&n.length<2)return 'Karakter adı en az 2 karakter olmalı.';
-  if(c&&(c.length<3||/https?:|www\.|\.com|\.net/i.test(c)))return 'İletişim en az 3 karakter olmalı ve bağlantı içermemeli.';
-  if(!n&&!c)return 'Karakter adı veya iletişimden en az birini yaz.';
-  return '';
-};
 async function initCatalog(){
-  const [a,b,c]=await Promise.all([sb.from('item_catalog').select('category,name').order('name'),sb.from('efsun_catalog').select('name').order('name'),sb.from('stone_catalog').select('name').order('name')]);
+  const [a,b,c,sv]=await Promise.all([sb.from('item_catalog').select('category,name').order('name'),sb.from('efsun_catalog').select('name,max_value').order('name'),sb.from('stone_catalog').select('name').order('name'),sb.from('servers').select('name').eq('active',true).order('sort').order('name')]);
   if(a.error||b.error||c.error){toast('Katalog yüklenemedi. supabase.sql dosyasını çalıştırdın mı?');return}
-  CATALOG=a.data;EFSUN=b.data.map(x=>x.name);STONES=c.data.map(x=>x.name);
+  CATALOG=a.data;EFSUN=b.data.map(x=>x.name);EFMAX=Object.fromEntries(b.data.filter(x=>x.max_value).map(x=>[x.name,x.max_value]));
+  if(!sv.error&&sv.data&&sv.data.length){SERVERS=sv.data.map(x=>x.name);fillServers()}STONES=c.data.map(x=>x.name);
   const cats=[...new Set(CATALOG.map(x=>x.category))].sort((x,y)=>x.localeCompare(y,'tr'));
   $('#fCat').innerHTML=opts(cats,'Hepsi');$('#pCat').innerHTML=opts(cats,'Kategori seç');
   fillNames();
-  $('#efRows').innerHTML=[1,2,3,4,5,6].map(i=>`<div class="ef${i>2?' x':''}" id="efr${i}"><select id="ef${i}n" aria-label="Efsun ${i}">${opts(EFSUN,'Efsun '+i+(i>2?'':' (zorunlu)'))}</select><input id="ef${i}v" class="efv" type="text" inputmode="numeric" maxlength="2" placeholder="1-15" autocomplete="off" aria-label="Efsun ${i} değeri">${i>2?`<button class="btn sm bad" type="button" data-rm="${i}" aria-label="Efsunu kaldır">×</button>`:''}</div>`).join('');
+  $('#efRows').innerHTML=[1,2,3,4,5,6].map(i=>`<div class="ef${i>2?' x':''}" id="efr${i}"><select id="ef${i}n" aria-label="Efsun ${i}">${opts(EFSUN,'Efsun '+i+(i>2?'':' (zorunlu)'))}</select><input id="ef${i}v" class="efv" type="text" inputmode="numeric" maxlength="4" placeholder="Değer" autocomplete="off" aria-label="Efsun ${i} değeri">${i>2?`<button class="btn sm bad" type="button" data-rm="${i}" aria-label="Efsunu kaldır">×</button>`:''}</div>`).join('');
   efLayout();
 }
 function efLayout(){
@@ -104,9 +100,11 @@ function renderAuth(){
   $('#tabMine').classList.toggle('hide',!user);
   $('#tabAdmin').classList.toggle('hide',!isAdmin);
   applyCfg();
-  if(!user&&view==='mine'){setView('items');return}
+  if(!user&&['mine','fav','msg'].includes(view)){setView('items');return}
 }
-async function setUser(u){user=u;isAdmin=false;renderAuth();if(u){try{const {data}=await sb.rpc('is_admin');isAdmin=data===true}catch{}renderAuth()}load(true)}
+async function setUser(u){user=u;isAdmin=false;renderAuth();if(u){try{const {data}=await sb.rpc('is_admin');isAdmin=data===true}catch{}renderAuth()}
+  if(u){loadFavs();loadChats()}else{FAVS=new Map();FAVCHG=new Set();CHATS=[];MSGUN=0;paintBadges()}
+  load(true)}
 sb.auth.getSession().then(({data})=>setUser(data.session?.user||null));
 sb.auth.onAuthStateChange((ev,s)=>{
   if(ev==='PASSWORD_RECOVERY'){recovery=true;openAuth('recover')}
@@ -166,7 +164,7 @@ async function forgot(){
 /* ---------- İlanları yükle ---------- */
 function setView(v){
   view=v;
-  const T={items:'#tabItems',yang:'#tabYang',feat:'#tabFeat',prem:'#tabPrem',mine:'#tabMine'};
+  const T={items:'#tabItems',yang:'#tabYang',feat:'#tabFeat',prem:'#tabPrem',fav:'#tabFav',msg:'#tabMsg',mine:'#tabMine'};
   for(const k in T)$(T[k]).setAttribute('aria-selected',k===v);
   $('#fItems').classList.toggle('hide',v!=='items');
   $('#fYang').classList.toggle('hide',v!=='yang');
@@ -177,12 +175,15 @@ function setView(v){
   load(true);
 }
 let loadTok=0,fresh=0,isAdmin=false;
-let FEAT_LIMIT=0,FEAT_USED=0,MYRENT=[],OFFERS=[],SHARE=null,ADS={top:[],feed:[],bottom:[]};const adSeen=new Set();
+let FEAT_LIMIT=0,FEAT_USED=0,MYRENT=[],OFFERS=[],SHARE=null,ADS={top:[],feed:[],bottom:[]};
+let FAVS=new Map(),FAVCHG=new Set(),CHATS=[],CHAT={id:null},EFMAX={},MSGUN=0;const adSeen=new Set();
 async function load(reset){
   const tok=++loadTok;
   if(reset){page=0;fresh=0;$('#freshBar').classList.add('hide');$('#list').innerHTML='<div class="skel"></div><div class="skel"></div>';$('#moreBtn').classList.add('hide')}
   if(view==='feat')return loadFeat(tok);
   if(view==='prem')return loadPrem(tok);
+  if(view==='fav')return loadFav(tok);
+  if(view==='msg')return loadMsgs(tok);
   let html='',cnt=0,err=null;
   if(view==='mine'){
     if(!user)return;
@@ -205,7 +206,7 @@ async function load(reset){
     }else{
       const name=clean($('#fName').value),ef=clean($('#fEfsun').value);
       if(name)q=q.ilike('item_name',`%${name}%`);
-      if(ef)q=q.or(['efsun_1','efsun_2','efsun_3','efsun_4','efsun_5','efsun_6'].map(c=>`${c}.ilike.%${ef}%`).join(','));
+      if(ef)q=q.ilike('search_text',`%${ef.toLowerCase()}%`);
       if($('#fCat').value)q=q.eq('category',$('#fCat').value);
       if($('#fPlus').value)q=q.ilike('item_name',`%${$('#fPlus').value}`);
       if($('#fCur').value)q=q.eq('currency',$('#fCur').value);
@@ -237,13 +238,19 @@ function parts(i,k,o){
   const ms=new Date(i.expires_at)-Date.now(),expired=ms<=0,sold=i.status==='sold',mine=user&&user.id===i.user_id;
   const st=sold?'<span class="tag st">Satıldı</span>':expired?'<span class="tag st">Süresi doldu</span>':'';
   const tags=`<div class="tags">${i.featured?'<span class="badge">⭐ Öne çıkan</span>':''}${pr?'<span class="badge prem">💎 Premium</span>':''}${i.server?`<span class="tag srv">📍 ${esc(i.server)}</span>`:''}${st}</div>`;
-  const who=(i.seller_name?`<span>Karakter adı: <b>${esc(i.seller_name)}</b></span>`:'')+(i.contact_info?`<span>İletişim: <b>${esc(i.contact_info)}</b></span>`:'')||'<span>İletişim bilgisi yok</span>';
+  const who=i.seller_name?`<span>🎮 Karakter adı: <b>${esc(i.seller_name)}</b></span>`:'<span>Karakter adı yok</span>';
   const d=`data-k="${k}" data-id="${i.id}"`;
+  const isFav=FAVS.has(k+i.id);
   const acts=mine
-    ?`${ownerExtra(i,d,sold,expired)}<button class="btn sm" data-act="share" ${d} aria-label="Paylaş">🔗</button><button class="btn sm" data-act="edit" ${d}>Düzenle</button>${!sold&&!expired?`<button class="btn sm ok" data-act="sold" ${d}>Satıldı</button>`:`<button class="btn sm ok" data-act="renew" ${d}>Yenile</button>`}<button class="btn sm bad" data-act="del" ${d}>Sil</button>`
-    :`<button class="btn sm" data-act="share" ${d} aria-label="Paylaş">🔗</button>${i.seller_name?`<button class="btn sm gold" data-act="copy" data-nick="${esc(i.seller_name)}">/w kopyala</button>`:''}<button class="btn sm" data-act="report" ${d} aria-label="İlanı şikayet et">🚩</button>${isAdmin?`<button class="btn sm bad" data-act="adel" ${d}>🛡 Sil</button><button class="btn sm bad" data-act="aban" ${d}>⛔ Yasakla</button>`:''}`;
+    ?ownerExtra(i,d,sold,expired)+ab(d,'share','🔗','Paylaş')+ab(d,'edit','✏️','Düzenle')+(!sold&&!expired?ab(d,'sold','✅','Satıldı','ok'):ab(d,'renew','🔄','Yenile','ok'))+ab(d,'del','🗑','Sil','bad')
+    :(cb('favorites_enabled')&&user?ab(d,'fav',isFav?'❤️':'🤍',isFav?'Favoriden çıkar':'Favoriye ekle'):'')
+      +ab(d,'share','🔗','Paylaş')
+      +(cb('chat_enabled')&&!sold&&!expired?ab(d,'ask','💬','Soru sor','gold'):'')
+      +(i.seller_name?`<button class="btn sm" data-act="copy" data-nick="${esc(i.seller_name)}" title="Oyunda sohbet kutusuna yapıştırılacak /w komutunu kopyalar" aria-label="Oyunda yaz"><span class="ic">🎮</span><span class="lb"> Oyunda yaz</span></button>`:'')
+      +ab(d,'report','🚩','Şikayet et')
+      +(isAdmin?ab(d,'adel','🛡','Sil (yönetici)','bad')+ab(d,'aban','⛔','Yasakla','bad'):'');
   const left=!sold&&!expired?` · ${Math.ceil(ms/36e5)} saat kaldı`:'';
-  return {cls:`${sold?'sold':''} ${expired?'exp':''} ${i.featured?'feat':''} ${pr?'prem':''}`,expired,sold,tags,who,acts,left,date:new Date(i.created_at).toLocaleDateString('tr-TR')};
+  return {note:(o&&o.note)||'',cls:`${sold?'sold':''} ${expired?'exp':''} ${i.featured?'feat':''} ${pr?'prem':''}`,expired,sold,tags,who,acts,left,date:new Date(i.created_at).toLocaleDateString('tr-TR')};
 }
 function card(i,o){
   const p=parts(i,'i',o);
@@ -257,7 +264,7 @@ function card(i,o){
     <div class="head"><h3>${esc(base)}${plus?` <span class="tag plus">${esc(plus)}</span>`:''}</h3><span class="price">${price}</span></div>
     ${p.tags}
     <ol class="efl">${efs}</ol>${stn}
-    <div class="who">${p.who}</div>
+    ${p.note}<div class="who">${p.who}</div>
     <div class="foot"><span>${esc(i.category||'')} · ${p.date}${p.left}</span><div class="acts">${p.acts}</div></div>
   </article>`;
 }
@@ -267,7 +274,7 @@ function yangCard(i,o){
     <div class="head"><h3>💰 ${fmt(i.amount)} ${esc(i.unit)} Yang</h3><span class="price">${fmt(i.price_tl)} TL</span></div>
     ${p.tags}
     <div class="seller">Birim fiyat: <b>${fmt(i.price_tl/i.amount)} TL / ${esc(i.unit)}</b></div>
-    <div class="who">${p.who}</div>
+    ${p.note}<div class="who">${p.who}</div>
     <div class="foot"><span>${p.date}${p.left}</span><div class="acts">${p.acts}</div></div>
   </article>`;
 }
@@ -291,28 +298,28 @@ async function openPost(item){
     setEfsuns(item);
     (item.stones||[]).forEach(x=>{const t=x.match(/^(.*) (\+\d)$/);if(t)addStone(t[1],t[2])});
     $('#pPrice').value=item.price_value??'';$('#pCur').value=item.currency||'TL';
-    $('#pNick').value=item.seller_name||'';$('#pContact').value=item.contact_info||'';$('#pDur').value=item.duration_hours||24;
+    $('#pNick').value=item.seller_name||'';$('#pDur').value=item.duration_hours||24;
   }else{
     $('#pCat').value='';fillNames();toggleStone();$('#pPlus').selectedIndex=0;setEfsuns(null);
-    ['#pPrice','#pNick','#pContact'].forEach(x=>$(x).value='');$('#pCur').selectedIndex=0;$('#pDur').value='24';
+    ['#pPrice','#pNick'].forEach(x=>$(x).value='');$('#pCur').selectedIndex=0;$('#pDur').value='24';
   }
   $('#postDlg').showModal();
 }
 async function postSubmit(){
   const err=$('#postErr'),btn=$('#postGo');err.textContent='';
   const cat=$('#pCat').value,base=$('#pName').value,price=parseFloat($('#pPrice').value);
-  const nick=$('#pNick').value.trim()||null,contact=$('#pContact').value.trim()||null;
+  const nick=$('#pNick').value.trim()||null;
   if(!$('#pSrv').value){err.textContent='Sunucu seçmelisin.';return}
   if(!cat||!base){err.textContent='Kategori ve item seçmelisin.';return}
   const row={server:$('#pSrv').value,category:cat,item_name:`${base} ${$('#pPlus').value}`,price_value:price,currency:$('#pCur').value,
-    price:`${price} ${$('#pCur').value}`,seller_name:nick,contact_info:contact,duration_hours:+$('#pDur').value,status:'active'};
+    price:`${price} ${$('#pCur').value}`,seller_name:nick,contact_info:null,duration_hours:+$('#pDur').value,status:'active'};
   const seen=new Set();
   for(let n=1;n<=6;n++){
     row['efsun_'+n]=null;
     if(n>efShown)continue;
     const nm=$(`#ef${n}n`).value,v=$(`#ef${n}v`).value.trim();
     if(!nm){err.textContent=`${n}. efsunu seç${n>2?' ya da × ile kaldır':''}.`;return}
-    if(!/^\d{1,2}$/.test(v)||+v<1||+v>15){err.textContent=`${n}. efsun değeri 1 ile 15 arasında bir sayı olmalı.`;return}
+    const mx=efMax(nm);if(!/^\d{1,4}$/.test(v)||+v<1||+v>mx){err.textContent=`${n}. efsun değeri 1 ile ${mx} arasında bir sayı olmalı.`;return}
     if(seen.has(nm)){err.textContent='Aynı efsunu iki kez seçtin.';return}
     seen.add(nm);row['efsun_'+n]=`${nm} +${+v}`;
   }
@@ -324,8 +331,7 @@ async function postSubmit(){
   }
   if(!(price>0)){err.textContent='Geçerli bir fiyat gir.';return}
   if(nick&&nick.length<2){err.textContent='Karakter adı en az 2 karakter olmalı.';return}
-  if(contact&&(contact.length<3||/https?:|www\.|\.com|\.net/i.test(contact))){err.textContent='İletişim en az 3 karakter olmalı ve bağlantı içermemeli.';return}
-  if(!nick&&!contact){err.textContent='Karakter adı veya iletişimden en az birini yaz.';return}
+  if(!nick||nick.length<2){err.textContent='Oyun içi karakter adını yaz (en az 2 karakter).';return}
   btn.disabled=true;
   let r;
   if(editId){row.expires_at=new Date().toISOString();r=await sb.from('items').update(row).eq('id',editId).eq('user_id',user.id)}
@@ -358,7 +364,7 @@ async function openYang(item){
   $('#ySrv').value=item?item.server||'':prefSrv();
   $('#yAmt').value=item?item.amount:'';$('#yUnit').value=item?item.unit:UNITS[0];
   $('#yPrice').value=item?item.price_tl:'';
-  $('#yNick').value=item?item.seller_name||'':'';$('#yContact').value=item?item.contact_info||'':'';
+  $('#yNick').value=item?item.seller_name||'':'';
   $('#yDur').value=item?item.duration_hours||24:'24';
   yCalc();$('#yangDlg').showModal();
 }
@@ -366,12 +372,12 @@ function yCalc(){const a=parseFloat($('#yAmt').value),p=parseFloat($('#yPrice').
 async function yangSubmit(){
   const err=$('#yErr'),btn=$('#yGo');err.textContent='';
   const srv=$('#ySrv').value,amt=parseFloat($('#yAmt').value),pr=parseFloat($('#yPrice').value);
-  const nick=$('#yNick').value.trim()||null,contact=$('#yContact').value.trim()||null;
+  const nick=$('#yNick').value.trim()||null;
   if(!srv){err.textContent='Sunucu seçmelisin.';return}
   if(!(amt>0)||amt>=1e12){err.textContent='Geçerli bir yang miktarı gir.';return}
   if(!(pr>0)||pr>=1e9){err.textContent='Geçerli bir fiyat gir.';return}
-  const ce=contactErr(nick,contact);if(ce){err.textContent=ce;return}
-  const row={server:srv,amount:amt,unit:$('#yUnit').value,price_tl:pr,seller_name:nick,contact_info:contact,duration_hours:+$('#yDur').value,status:'active'};
+  if(!nick||nick.length<2){err.textContent='Oyun içi karakter adını yaz (en az 2 karakter).';return}
+  const row={server:srv,amount:amt,unit:$('#yUnit').value,price_tl:pr,seller_name:nick,contact_info:null,duration_hours:+$('#yDur').value,status:'active'};
   btn.disabled=true;
   let r;
   if(yEditId){row.expires_at=nowIso();r=await sb.from('yang_listings').update(row).eq('id',yEditId).eq('user_id',user.id)}
@@ -387,7 +393,7 @@ let fbRef=null;
 function openFeedback(kind,ref,msg){
   fbRef=ref||null;
   $('#fbKind').value=kind||'hata';$('#fbKind').disabled=!!ref;
-  $('#fbRefTxt').textContent=ref?(/^(plan|slot|ad):/.test(ref)?'Talep':`Şikayet edilen ilan: ${ref.replace('items:','İtem #').replace('yang_listings:','Yang #')}`):'';
+  $('#fbRefTxt').textContent=ref?(/^(plan|slot|ad):/.test(ref)?'Talep':ref.startsWith('chat:')?'Sohbet şikayeti':`Şikayet edilen ilan: ${ref.replace('items:','İtem #').replace('yang_listings:','Yang #')}`):'';
   $('#fbRefTxt').classList.toggle('hide',!ref);
   $('#fbMsg').value=msg||'';$('#fbErr').textContent='';$('#fbDlg').showModal();
 }
@@ -411,12 +417,16 @@ async function onCardClick(e){
   const b=e.target.closest('button[data-act]');if(!b)return;
   const act=b.dataset.act,id=b.dataset.id,k=b.dataset.k,T=k==='y'?'yang_listings':'items';
   if(act==='copy'){
-    try{await navigator.clipboard.writeText('/w '+b.dataset.nick);toast('Kopyalandı: /w '+b.dataset.nick)}
+    try{await navigator.clipboard.writeText('/w '+b.dataset.nick);toast('Kopyalandı: /w '+b.dataset.nick+' · oyunda sohbet kutusuna yapıştır')}
     catch{toast('Satıcı: '+b.dataset.nick)}
     return;
   }
   if(ADMIN_ACTS.includes(act)){if(!isAdmin)return;return adminAct(b)}
   if(act==='share')return openShare(k,id);
+  if(act==='fav')return toggleFav(k,id);
+  if(act==='favseen')return favSeen(k,id);
+  if(act==='favrm')return favRemove(b.dataset.fid);
+  if(act==='ask')return openAsk(k,id);
   if(act==='feat'){await refreshQuota();if(FEAT_USED>=FEAT_LIMIT)return openLimit();
     const {error}=await sb.from(T).update({featured:true}).eq('id',id).eq('user_id',user.id);
     return error?toast(dbErr(error.message)):(toast('İlanın öne çıkarıldı ⭐'),load(true))}
@@ -449,8 +459,9 @@ $('#authClose').onclick=()=>$('#authDlg').close();
 $('#pass').addEventListener('keydown',e=>{if(e.key==='Enter')authSubmit()});
 $('#newBtn').onclick=openNew;$('#postGo').onclick=postSubmit;$('#postClose').onclick=()=>$('#postDlg').close();
 $('#tabItems').onclick=()=>setView('items');$('#tabYang').onclick=()=>setView('yang');$('#tabMine').onclick=()=>setView('mine');
+$('#tabFeat').onclick=()=>setView('feat');$('#tabPrem').onclick=()=>setView('prem');$('#tabFav').onclick=()=>setView('fav');$('#tabMsg').onclick=()=>setView('msg');
 $('#moreBtn').onclick=()=>{page++;load(false)};
-['fName','fEfsun'].forEach(id=>$('#'+id).addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>load(true),350)}));
+['fName','fEfsun'].forEach(id=>$('#'+id).addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{const a=$('#fName').value.trim(),b=$('#fEfsun').value.trim();if((a&&a.length<2)||(b&&b.length<2))return;load(true)},650)}));
 ['fCat','fPlus','fSort','fCur','fSrv','fySrv','fyUnit','fySort'].forEach(id=>$('#'+id).addEventListener('change',()=>load(true)));
 $('#resetBtn').onclick=()=>{['fName','fEfsun','fCat','fPlus','fCur','fSrv','fySrv','fyUnit'].forEach(id=>$('#'+id).value='');$('#fSort').value='new';$('#fySort').value='new';load(true)};
 $('#pCat').onchange=()=>{fillNames();toggleStone()};
@@ -460,7 +471,19 @@ $('#efRows').addEventListener('click',e=>{const b=e.target.closest('[data-rm]');
 $('#stRows').addEventListener('click',e=>{if(e.target.closest('[data-rmst]')){e.target.closest('.ef').remove();stLayout()}});
 $('#moreSlots').onclick=()=>openLimit();
 $('#limitClose').onclick=()=>$('#limitDlg').close();
-$('#efRows').addEventListener('input',e=>{if(!e.target.classList.contains('efv'))return;let v=e.target.value.replace(/\D/g,'').replace(/^0+/,'');if(+v>15)v='15';e.target.value=v});
+const efMax=nm=>EFMAX[nm]||(+CFG.efsun_max_default||100);
+$('#efRows').addEventListener('input',e=>{
+  if(!e.target.classList.contains('efv'))return;
+  let v=e.target.value.replace(/\D/g,'').replace(/^0+/,'');
+  const sel=e.target.closest('.ef').querySelector('select'),mx=sel&&sel.value?efMax(sel.value):9999;
+  if(+v>mx)v=String(mx);e.target.value=v;
+});
+$('#efRows').addEventListener('change',e=>{
+  if(e.target.tagName!=='SELECT')return;
+  const inp=e.target.closest('.ef').querySelector('.efv');if(!inp)return;
+  const mx=e.target.value?efMax(e.target.value):0;inp.placeholder=mx?`1-${mx}`:'Değer';
+  if(mx&&+inp.value>mx)inp.value=String(mx);
+});
 $('#chItem').onclick=()=>{$('#typeDlg').close();openPost()};
 $('#chYang').onclick=()=>{$('#typeDlg').close();openYang()};
 $('#typeClose').onclick=()=>$('#typeDlg').close();
@@ -551,7 +574,9 @@ const LEGAL={
  <li><b>İlanlar.</b> İlanlar 24 veya 48 saat yayında kalır. Ücretsiz kullanımda aynı anda en fazla 2 aktif ilan verilebilir. Bu kurallar değişebilir.</li></ul>`],
  privacy:['Gizlilik bilgilendirmesi',`<p>Hangi veriyi neden tuttuğumuzu açıkça yazıyoruz:</p>
  <ul><li><b>E-posta ve şifre:</b> Hesap açmak ve giriş için. Şifren şifrelenmiş saklanır, bize görünmez.</li>
- <li><b>İlan bilgileri:</b> Karakter adı ve iletişim bilgisi dahil, ilanla birlikte <b>herkese açık</b> görünür. Kişisel bilgilerini (telefon, adres vb.) yazma.</li>
+ <li><b>İlan bilgileri:</b> Oyun içi karakter adın ilanla birlikte <b>herkese açık</b> görünür. Telefon, adres gibi kişisel bilgilerini yazma; ilanlarda e-posta/telefon alanı yoktur.</li>
+ <li><b>Mesajlaşma:</b> Satıcıya sorduğun mesajlar yalnızca sohbetin iki tarafına görünür. Şikayet edilen sohbetleri yönetim inceleyebilir. Sohbetler 30 gün sonra silinir. Mesajlara e-posta, telefon ve link yazılamaz.</li>
+ <li><b>Favoriler:</b> Favori ilanların ve eklediğin andaki fiyat, sadece fiyat değişikliğini sana göstermek için saklanır.</li>
  <li><b>Geri bildirimler:</b> Gönderdiğin mesaj, sayfa bilgisi, cihaz türü ve varsa son hata, sorunu çözmek için saklanır.</li>
  <li><b>Saklama yeri:</b> Veriler Supabase altyapısında tutulur. Verilerin satılmaz veya reklam amacıyla paylaşılmaz.</li>
  <li><b>Silme talebi:</b> Hesabının ve ilanlarının silinmesi için "Geri bildirim" formundan bize yaz.</li></ul>`],
@@ -586,6 +611,7 @@ function applyCfg(){
   const m=cb('maintenance',false);
   $('#maint').classList.toggle('hide',!(m&&!isAdmin));$('#maintAdmin').classList.toggle('hide',!(m&&isAdmin));
   if(CFG.maintenance_msg)$('#maintTxt').textContent=CFG.maintenance_msg;
+  $('#tabFav').classList.toggle('hide',!(user&&cb('favorites_enabled')));$('#tabMsg').classList.toggle('hide',!(user&&cb('chat_enabled')));
   $('#tabFeat').classList.toggle('hide',!cb('featured_enabled'));$('#tabPrem').classList.toggle('hide',!cb('premium_enabled'));
   $('#goGoogle').classList.toggle('hide',!cb('oauth_google',false));$('#goDiscord').classList.toggle('hide',!cb('oauth_discord',false));
   if((view==='feat'&&!cb('featured_enabled'))||(view==='prem'&&!cb('premium_enabled')))setView(it?'items':'yang');
@@ -600,11 +626,17 @@ async function openLimit(){
   if(!$('#limitDlg').open)$('#limitDlg').showModal();
   const [pl,mine]=await Promise.all([
     sb.from('plans').select('*').eq('active',true).order('sort').order('listing_limit'),
-    user?sb.from('user_plans').select('expires_at,plans(name,listing_limit)').eq('user_id',user.id).gt('expires_at',nowIso()):Promise.resolve({data:[]})]);
+    user?sb.from('user_plans').select('expires_at,plans(name,kind)').eq('user_id',user.id).gt('expires_at',nowIso()):Promise.resolve({data:[]})]);
   PLAN_CACHE={};(pl.data||[]).forEach(p=>PLAN_CACHE[p.id]=p);
-  const have=(mine.data||[]).map(m=>`<div class="notice">✅ <span>Aktif paketin: <b>${esc(m.plans?m.plans.name:'')}</b> · ${new Date(m.expires_at).toLocaleDateString('tr-TR')} tarihine kadar</span></div>`).join('');
-  const list=(pl.data||[]).map(p=>`<div class="card" style="margin-top:8px"><div class="head"><h3>${esc(p.name)}</h3><span class="price">${esc(p.price_text||'')}</span></div><div class="seller">Aynı anda <b>${p.listing_limit}</b> aktif ilan${p.featured_slots?` · <b>${p.featured_slots}</b> öne çıkarma`:''} · ${p.duration_days} gün</div>${p.description?`<div class="seller">${esc(p.description)}</div>`:''}<button class="btn sm gold" data-plan="${p.id}" style="align-self:flex-start">Bu paketi istiyorum</button></div>`).join('');
-  $('#planList').innerHTML=have+(list||'<div class="notice">⭐ <span>Ücretli paketler çok yakında geliyor.</span></div>')+(list&&CFG.packages_text?`<p class="hint">${esc(CFG.packages_text)}</p>`:'');
+  const ic=p=>p&&p.kind==='featured'?'⭐':'📦';
+  const have=(mine.data||[]).map(m=>`<div class="notice">✅ <span>Aktif paketin: <b>${ic(m.plans)} ${esc(m.plans?m.plans.name:'')}</b> · ${new Date(m.expires_at).toLocaleDateString('tr-TR')} tarihine kadar</span></div>`).join('');
+  const one=p=>{
+    const t=[];if(p.listing_limit>0)t.push(`aynı anda <b>${p.listing_limit}</b> aktif ilan`);if(p.featured_slots>0)t.push(`<b>${p.featured_slots}</b> ilanı öne çıkarma`);
+    return `<div class="card" style="margin-top:8px"><div class="head"><h3>${ic(p)} ${esc(p.name)}</h3><span class="price">${esc(p.price_text||'')}</span></div><div class="seller">${t.join(' · ')} · ${p.duration_days} gün</div>${p.description?`<div class="seller">${esc(p.description)}</div>`:''}<button class="btn sm gold" data-plan="${p.id}" style="align-self:flex-start">Bu paketi istiyorum</button></div>`};
+  const L=(pl.data||[]).filter(p=>p.kind!=='featured'),F=(pl.data||[]).filter(p=>p.kind==='featured');
+  const sec=(t,a)=>a.length?`<h4 class="sec" style="margin-top:12px">${t}</h4>`+a.map(one).join(''):'';
+  const body=sec('📦 İlan paketleri (aynı anda daha fazla ilan)',L)+sec('⭐ Öne çıkarma paketleri (ilanını en üste taşı)',F);
+  $('#planList').innerHTML=have+(body||'<div class="notice">⭐ <span>Ücretli paketler çok yakında geliyor.</span></div>')+(body&&CFG.packages_text?`<p class="hint">${esc(CFG.packages_text)}</p>`:'');
 }
 $('#planList').addEventListener('click',e=>{
   const b=e.target.closest('[data-plan]');if(!b)return;
@@ -658,15 +690,15 @@ function openRent(pos){
 }
 function ownerExtra(i,d,sold,expired){
   if(sold||expired)return '';
-  return (i.featured?`<button class="btn sm" data-act="unfeat" ${d}>⭐ Kaldır</button>`:(cb('featured_enabled')?`<button class="btn sm" data-act="feat" ${d}>⭐ Öne çıkar</button>`:''))
-    +((MYRENT.length&&cb('premium_enabled'))?`<button class="btn sm" data-act="prem" ${d} aria-label="Premium alana yerleştir">💎</button>`:'');
+  return (i.featured?ab(d,'unfeat','⭐','Öne çıkarmayı kaldır'):(cb('featured_enabled')?ab(d,'feat','⭐','Öne çıkar'):''))
+    +((MYRENT.length&&cb('premium_enabled'))?ab(d,'prem','💎','Premium alana koy'):'');
 }
 
 /* ---------- Reklam alanları ---------- */
 async function loadAds(){
   ADS={top:[],feed:[],bottom:[]};
   if(cb('ads_enabled')){
-    const now=nowIso(),{data}=await sb.from('ads').select('*').eq('active',true).lte('starts_at',now).gt('ends_at',now);
+    const now=nowIso(),{data}=await sb.from('spotlights').select('*').eq('active',true).lte('starts_at',now).gt('ends_at',now);
     (data||[]).forEach(a=>{if(ADS[a.slot])ADS[a.slot].push(a)});
   }
   paintAds();
@@ -675,17 +707,17 @@ function adHtml(slot,inl){
   if(!cb('ads_enabled'))return '';
   const list=ADS[slot]||[];
   if(!list.length){
-    return cb('ads_show_empty')?`<button class="adbox empty ${inl?'inl':''}" data-adreq="${slot}" type="button"><b>📢 Reklam alanı</b><br><small>Burada reklam yayınlayabilirsin · talep gönder</small></button>`:'';
+    return cb('ads_show_empty')?`<button class="spbox empty s-${slot} ${inl?'inl':''}" data-spreq="${slot}" type="button"><b>📢 Reklam alanı</b><br><small>Burada reklam yayınlayabilirsin · talep gönder</small></button>`:'';
   }
   const a=list[Math.floor(Math.random()*list.length)];
-  if(!adSeen.has(a.id)){adSeen.add(a.id);sb.rpc('ad_view',{p_id:a.id}).then(()=>{},()=>{})}
+  if(!adSeen.has(a.id)){adSeen.add(a.id);sb.rpc('spotlight_seen',{p_id:a.id}).then(()=>{},()=>{})}
   const body=a.kind==='image'?`<img src="${esc(a.image_url)}" alt="${esc(a.title||a.advertiser||'Reklam')}" loading="lazy">`
-    :`<div class="adt"><b>${esc(a.title)}</b><span>${esc(a.body||'')}</span></div>`;
-  return `<a class="adbox ${inl?'inl':''}" href="${esc(a.link_url)}" target="_blank" rel="sponsored nofollow noopener noreferrer" data-ad="${a.id}"><span class="adtag">Reklam</span>${body}</a>`;
+    :`<div class="spt"><b>${esc(a.title)}</b><span>${esc(a.body||'')}</span></div>`;
+  return `<a class="spbox s-${slot} ${inl?'inl':''}" href="${esc(a.link_url)}" target="_blank" rel="sponsored nofollow noopener noreferrer" data-sp="${a.id}"><span class="sptag">Reklam</span>${body}</a>`;
 }
 function paintAds(){
   const show=view!=='mine';
-  $('#adTop').innerHTML=show?adHtml('top'):'';$('#adBottom').innerHTML=show?adHtml('bottom'):'';
+  $('#spTop').innerHTML=show?adHtml('top'):'';$('#spBottom').innerHTML=show?adHtml('bottom'):'';
 }
 function withAds(arr,fn,off){
   const every=Math.max(3,+CFG.ads_feed_every||8);
@@ -693,11 +725,11 @@ function withAds(arr,fn,off){
 }
 document.addEventListener('click',e=>{
   const r=e.target.closest('[data-rent]');if(r)return openRent(r.dataset.rent);
-  const q=e.target.closest('[data-adreq]');
-  if(q){const n={top:'Üst banner',feed:'Liste arası',bottom:'Alt banner'}[q.dataset.adreq];
-    return openFeedback('diger','ad:'+q.dataset.adreq,`Reklam talebi: ${n} alanı. Fiyat ve ölçüler hakkında bilgi almak istiyorum. ${CFG.ads_contact_text||''}`.slice(0,300))}
+  const q=e.target.closest('[data-spreq]');
+  if(q){const n={top:'Üst banner',feed:'Liste arası',bottom:'Alt banner'}[q.dataset.spreq];
+    return openFeedback('diger','ad:'+q.dataset.spreq,`Reklam talebi: ${n} alanı. Fiyat ve ölçüler hakkında bilgi almak istiyorum. ${CFG.ads_contact_text||''}`.slice(0,300))}
   if(e.target.closest('[data-open="plans"]'))return openLimit();
-  const a=e.target.closest('a[data-ad]');if(a)sb.rpc('ad_click',{p_id:+a.dataset.ad}).then(()=>{},()=>{});
+  const a=e.target.closest('a[data-sp]');if(a)sb.rpc('spotlight_open',{p_id:+a.dataset.sp}).then(()=>{},()=>{});
 });
 $('#rentList').addEventListener('click',e=>{
   const b=e.target.closest('[data-offer]');if(!b)return;
@@ -741,6 +773,184 @@ async function openShared(k,id){
 async function oauth(p){const {error}=await sb.auth.signInWithOAuth({provider:p,options:{redirectTo:location.origin+location.pathname}});if(error)$('#authErr').textContent=error.message}
 $('#goGoogle').onclick=()=>oauth('google');$('#goDiscord').onclick=()=>oauth('discord');
 {const tb=$('#themeBtn'),th=()=>{const p=themeLabel().split(' ');return p[0]+'<span class="hide-sm"> '+p.slice(1).join(' ')+'</span>'};tb.innerHTML=th();tb.onclick=()=>{cycleTheme();tb.innerHTML=th()}}
+
+
+/* ---------- Kart düğmeleri ---------- */
+function ab(d,act,ic,lb,cls){return `<button class="btn sm ${cls||''}" data-act="${act}" ${d} title="${lb}" aria-label="${lb}"><span class="ic">${ic}</span><span class="lb"> ${lb}</span></button>`}
+
+/* ---------- Favoriler ve fiyat takibi ---------- */
+const priceOf=(r,k)=>k==='y'?Number(r.price_tl):Number(r.price_value);
+const curOf=(r,k)=>k==='y'?'TL':(r.currency||'');
+function paintBadges(){
+  const f=$('#favBadge'),m=$('#msgBadge');
+  f.textContent=FAVCHG.size;f.classList.toggle('hide',!FAVCHG.size);
+  m.textContent=MSGUN;m.classList.toggle('hide',!MSGUN);
+}
+function syncHearts(){
+  document.querySelectorAll('button[data-act="fav"]').forEach(b=>{
+    const on=FAVS.has(b.dataset.k+b.dataset.id),lb=on?'Favoriden çıkar':'Favoriye ekle';
+    b.querySelector('.ic').textContent=on?'❤️':'🤍';b.querySelector('.lb').textContent=' '+lb;b.title=lb;b.setAttribute('aria-label',lb);
+  });
+}
+async function loadFavs(){
+  if(!user)return;
+  const {data,error}=await sb.from('favorites').select('*');
+  if(error||!data)return;
+  FAVS=new Map(data.map(f=>[(f.kind==='yang'?'y':'i')+f.listing_id,f]));
+  FAVCHG=new Set();
+  const ids=kd=>data.filter(f=>f.kind===kd).map(f=>f.listing_id);
+  const [a,b]=await Promise.all([
+    ids('item').length?sb.from('items').select('id,price_value').in('id',ids('item')):{data:[]},
+    ids('yang').length?sb.from('yang_listings').select('id,price_tl').in('id',ids('yang')):{data:[]}]);
+  (a.data||[]).forEach(r=>{const f=FAVS.get('i'+r.id);if(f&&f.price_snap!=null&&Number(f.price_snap)!==Number(r.price_value))FAVCHG.add('i'+r.id)});
+  (b.data||[]).forEach(r=>{const f=FAVS.get('y'+r.id);if(f&&f.price_snap!=null&&Number(f.price_snap)!==Number(r.price_tl))FAVCHG.add('y'+r.id)});
+  paintBadges();syncHearts();
+}
+async function toggleFav(k,id){
+  if(!user){toast('Favori için önce giriş yap.');openAuth('in');return}
+  const key=k+id,row=cache.get(key),f=FAVS.get(key);
+  if(f){
+    const {error}=await sb.from('favorites').delete().eq('id',f.id);if(error)return toast(dbErr(error.message));
+    FAVS.delete(key);FAVCHG.delete(key);toast('Favorilerden çıkarıldı.');
+  }else{
+    const {data,error}=await sb.from('favorites').insert([{kind:k==='y'?'yang':'item',listing_id:+id,price_snap:row?priceOf(row,k):null}]).select().single();
+    if(error)return toast(dbErr(error.message));
+    FAVS.set(key,data);toast('❤ Favorilere eklendi. Fiyat değişirse haber veririz.');
+  }
+  paintBadges();syncHearts();
+  if(view==='fav')load(true);
+}
+async function favSeen(k,id){
+  const f=FAVS.get(k+id),r=cache.get(k+id);if(!f||!r)return;
+  const {error}=await sb.from('favorites').update({price_snap:priceOf(r,k)}).eq('id',f.id);if(error)return toast(dbErr(error.message));
+  f.price_snap=priceOf(r,k);FAVCHG.delete(k+id);paintBadges();toast('Tamam, yeni fiyat kaydedildi.');load(true);
+}
+async function favRemove(fid){
+  const {error}=await sb.from('favorites').delete().eq('id',fid);if(error)return toast(dbErr(error.message));
+  for(const [key,f] of FAVS)if(String(f.id)===String(fid))FAVS.delete(key);
+  paintBadges();load(true);
+}
+async function loadFav(tok){
+  $('#moreBtn').classList.add('hide');
+  if(!user)return;
+  await loadFavs();
+  const favs=[...FAVS.values()].sort((x,y)=>new Date(y.created_at)-new Date(x.created_at));
+  const idsOf=kd=>favs.filter(f=>f.kind===kd).map(f=>f.listing_id);
+  const [a,b]=await Promise.all([
+    idsOf('item').length?sb.from('items').select('*').in('id',idsOf('item')):{data:[]},
+    idsOf('yang').length?sb.from('yang_listings').select('*').in('id',idsOf('yang')):{data:[]}]);
+  if(tok!==loadTok)return;
+  if(a.error||b.error)return listErr((a.error||b.error).message);
+  const rowsI=Object.fromEntries((a.data||[]).map(r=>[r.id,r])),rowsY=Object.fromEntries((b.data||[]).map(r=>[r.id,r]));
+  const out=favs.map(f=>{
+    const k=f.kind==='yang'?'y':'i',r=(k==='y'?rowsY:rowsI)[f.listing_id];
+    if(!r)return `<div class="slot"><b>İlan kaldırılmış</b><span>Bu ilan silinmiş.</span><button class="btn sm bad" data-act="favrm" data-fid="${f.id}" type="button">Listeden çıkar</button></div>`;
+    const cur=priceOf(r,k),snap=f.price_snap==null?null:Number(f.price_snap);
+    let note='';
+    if(snap!=null&&cur!==snap){const dn=cur<snap;
+      note=`<div class="favnote ${dn?'dn':'up'}">${dn?'📉 Fiyat düştü':'📈 Fiyat arttı'}: <s>${fmt(snap)}</s> → <b>${fmt(cur)} ${esc(curOf(r,k))}</b> <button class="btn sm" data-act="favseen" data-k="${k}" data-id="${r.id}" type="button">Gördüm</button></div>`}
+    return k==='y'?yangCard(r,{note}):card(r,{note});
+  }).join('');
+  $('#count').textContent=favs.length?`${favs.length} favori`:'';
+  $('#list').innerHTML=out||'<div class="empty" style="grid-column:1/-1">Henüz favorin yok. Kartlardaki 🤍 ile ilanları kaydet; fiyatı değişirse burada görürsün.</div>';
+  refreshQuota();paintAds();
+}
+
+/* ---------- Mesajlaşma (satıcıya soru sor) ---------- */
+async function loadChats(){
+  if(!user)return;
+  const {data,error}=await sb.rpc('my_conversations');
+  if(error)return;
+  CHATS=data||[];MSGUN=CHATS.reduce((a,c)=>a+(c.cunread||0),0);paintBadges();
+}
+async function loadMsgs(tok){
+  $('#moreBtn').classList.add('hide');
+  await loadChats();
+  if(tok!==loadTok)return;
+  const ago=t=>{const m=Math.round((Date.now()-new Date(t))/60000);return m<1?'şimdi':m<60?m+' dk':m<1440?Math.round(m/60)+' sa':Math.round(m/1440)+' gün'};
+  $('#count').textContent=CHATS.length?`${CHATS.length} sohbet`:'';
+  $('#list').innerHTML=CHATS.length?CHATS.map(c=>`<article class="card chatrow" data-chat="${c.cid}" tabindex="0"><div class="head"><h3>${esc(c.ctitle)}</h3>${c.cunread?`<span class="badge">${c.cunread}</span>`:''}</div><div class="seller">${c.crole==='seller'?'Alıcı sana yazdı':'Satıcıya sordun'}${c.cnick&&c.crole==='buyer'?' · 🎮 '+esc(c.cnick):''}${c.cblocked?' · 🚫 kapalı':''}</div><div class="seller" style="color:var(--text)">${esc((c.cbody||'').slice(0,90))}</div><div class="foot"><span>${ago(c.clast)} önce</span></div></article>`).join('')
+    :'<div class="empty" style="grid-column:1/-1">Henüz sohbetin yok. Bir ilandaki 💬 "Soru sor" ile satıcıya yazabilirsin.</div>';
+  refreshQuota();paintAds();
+}
+$('#list').addEventListener('click',e=>{const r=e.target.closest('[data-chat]');if(r)openChat(+r.dataset.chat)});
+$('#list').addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('[data-chat]');if(r)openChat(+r.dataset.chat)}});
+let chatPoll=null;
+const fmtTime=t=>new Date(t).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const bubble=m=>`<div class="msg ${user&&m.sender_id===user.id?'me':'you'}"><div>${esc(m.body)}</div><small>${fmtTime(m.created_at)}</small></div>`;
+async function openChat(cid){
+  const c=CHATS.find(x=>x.cid===cid);if(!c)return;
+  CHAT={id:cid,kind:c.ckind,listing:c.clisting,title:c.ctitle,role:c.crole,blocked:c.cblocked,nick:c.cnick};
+  await showChat();
+}
+async function openAsk(k,id){
+  if(!user){toast('Soru sormak için önce giriş yap.');openAuth('in');return}
+  const r=cache.get(k+id);if(!r)return;
+  await loadChats();
+  const kd=k==='y'?'yang':'item',ex=CHATS.find(c=>c.ckind===kd&&String(c.clisting)===String(id)&&c.crole==='buyer');
+  if(ex)return openChat(ex.cid);
+  CHAT={id:null,kind:kd,listing:+id,title:k==='y'?`${fmt(r.amount)} ${r.unit} Yang`:r.item_name,role:'buyer',blocked:false,nick:r.seller_name};
+  await showChat();
+}
+async function showChat(){
+  $('#chatTitle').textContent=CHAT.title;
+  $('#chatSub').textContent=CHAT.role==='seller'?'Alıcı ile yazışıyorsun':'Satıcıya soruyorsun'+(CHAT.nick?' · 🎮 '+CHAT.nick:'');
+  $('#chatInput').value='';$('#chatErr').textContent='';
+  $('#chatQuick').classList.toggle('hide',CHAT.role==='seller'||!!CHAT.id);
+  $('#chatBlock').classList.toggle('hide',!CHAT.id);$('#chatReport').classList.toggle('hide',!CHAT.id);
+  $('#chatBlock').textContent=CHAT.blocked?'Sohbeti aç':'Sohbeti kapat';
+  $('#chatLog').innerHTML='<div class="mut-note">Yükleniyor…</div>';
+  if(!$('#chatDlg').open)$('#chatDlg').showModal();
+  await refreshChat();
+  clearInterval(chatPoll);
+  chatPoll=setInterval(()=>{if($('#chatDlg').open&&CHAT.id)refreshChat(true);else clearInterval(chatPoll)},10000);
+}
+async function refreshChat(quiet){
+  if(!CHAT.id){$('#chatLog').innerHTML='<div class="mut-note">Merhaba! Satıcıya sorunu yaz. Telefon, e-posta veya link paylaşma; mesajlar sitede kalır.</div>';return}
+  const {data,error}=await sb.from('messages').select('*').eq('conv_id',CHAT.id).order('created_at').limit(300);
+  if(error){if(!quiet)$('#chatErr').textContent=dbErr(error.message);return}
+  const log=$('#chatLog'),atEnd=log.scrollTop+log.clientHeight>=log.scrollHeight-40;
+  log.innerHTML=data.map(bubble).join('')||'<div class="mut-note">Henüz mesaj yok.</div>';
+  if(!quiet||atEnd)log.scrollTop=log.scrollHeight;
+  sb.rpc('mark_read',{p_conv:CHAT.id}).then(()=>loadChats(),()=>{});
+}
+async function sendChat(){
+  const body=$('#chatInput').value.trim(),err=$('#chatErr');err.textContent='';
+  if(!body)return;
+  if(CHAT.blocked){err.textContent='Bu sohbet kapatılmış.';return}
+  $('#chatSend').disabled=true;
+  try{
+    if(!CHAT.id){
+      const {data,error}=await sb.rpc('start_conversation',{p_kind:CHAT.kind,p_id:CHAT.listing,p_body:body});
+      if(error)throw error;
+      CHAT.id=data;await loadChats();
+      $('#chatBlock').classList.remove('hide');$('#chatReport').classList.remove('hide');$('#chatQuick').classList.add('hide');
+    }else{
+      const {error}=await sb.from('messages').insert([{conv_id:CHAT.id,body}]);
+      if(error)throw error;
+    }
+    $('#chatInput').value='';await refreshChat();
+  }catch(e){err.textContent=dbErr(e.message||String(e))}
+  $('#chatSend').disabled=false;
+}
+$('#chatSend').onclick=sendChat;
+$('#chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat()}});
+$('#chatClose').onclick=()=>$('#chatDlg').close();
+$('#chatDlg').addEventListener('close',()=>clearInterval(chatPoll));
+$('#chatQuick').addEventListener('click',e=>{const b=e.target.closest('[data-q]');if(b){$('#chatInput').value=b.dataset.q;$('#chatInput').focus()}});
+$('#chatBlock').onclick=async()=>{
+  if(!CHAT.id)return;
+  const {data,error}=await sb.rpc('toggle_block',{p_conv:CHAT.id});if(error)return toast(dbErr(error.message));
+  CHAT.blocked=!!data;$('#chatBlock').textContent=CHAT.blocked?'Sohbeti aç':'Sohbeti kapat';toast(CHAT.blocked?'Sohbet kapatıldı.':'Sohbet açıldı.');loadChats();
+};
+$('#chatReport').onclick=()=>{if(CHAT.id)openFeedback('sikayet','chat:'+CHAT.id,'Sohbet şikayeti: ')};
+try{
+  sb.channel('chat-msgs').on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},p=>{
+    const m=p.new;if(!user||!m||m.sender_id===user.id)return;
+    if($('#chatDlg').open&&CHAT.id===m.conv_id)refreshChat(true);
+    else{toast('💬 Yeni mesajın var');loadChats().then(()=>{if(view==='msg')load(true)})}
+  }).subscribe();
+}catch{}
 
 initCatalog();
 loadCfg();

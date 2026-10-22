@@ -105,13 +105,13 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
 .card.prem{border-left-color:var(--warn);background:linear-gradient(180deg,color-mix(in srgb,var(--warn) 10%,var(--panel)),var(--panel))}
 .slot{border:2px dashed var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;min-height:190px;color:var(--mute)}
 .slot b{color:var(--text)}.slot.rsv{border-style:solid;border-color:color-mix(in srgb,var(--warn) 55%,var(--line))}
-.adbox{position:relative;display:block;margin:12px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel);text-decoration:none;color:inherit}
-.adbox img{width:100%;display:block;max-height:200px;object-fit:cover}
-.adbox .adt{padding:12px 14px}.adbox .adt b{display:block;color:var(--gold2)}.adbox .adt span{color:var(--mute);font-size:.88rem}
-.adtag{position:absolute;top:6px;right:8px;font-size:.65rem;background:rgba(0,0,0,.6);color:#fff;border-radius:6px;padding:1px 6px}
-.adbox.inl{margin:0;height:100%;display:flex;flex-direction:column;justify-content:center}
-.adbox.empty{border-style:dashed;text-align:center;padding:14px;color:var(--mute);cursor:pointer;background:transparent;width:100%;font:inherit}
-.adbox.empty b{color:var(--text)}
+.spbox{position:relative;display:block;margin:12px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel);text-decoration:none;color:inherit}
+.spbox img{width:100%;display:block;max-height:200px;object-fit:cover}
+.spbox .spt{padding:12px 14px}.spbox .spt b{display:block;color:var(--gold2)}.spbox .spt span{color:var(--mute);font-size:.88rem}
+.sptag{position:absolute;top:6px;right:8px;font-size:.65rem;background:rgba(0,0,0,.6);color:#fff;border-radius:6px;padding:1px 6px}
+.spbox.inl{margin:0;height:100%;display:flex;flex-direction:column;justify-content:center}
+.spbox.empty{border-style:dashed;text-align:center;padding:14px;color:var(--mute);cursor:pointer;background:transparent;width:100%;font:inherit}
+.spbox.empty b{color:var(--text)}
 .shr{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0}
 .shr .btn{display:flex;gap:8px;align-items:center;justify-content:center}
 .oauth{display:grid;gap:8px;margin:8px 0}.oauth .btn{display:flex;align-items:center;justify-content:center;gap:10px}
@@ -120,3 +120,27 @@ footer{color:var(--mute);font-size:.75rem;text-align:center;margin-top:30px}
 a.btn{text-decoration:none;color:inherit;display:inline-block}
 #shUrl{margin:6px 0}
 @media(max-width:560px){.hide-sm{display:none}.brand small{display:none}}
+
+/* v4: kart düğmeleri (mobilde ikon ağırlıklı), favori, sohbet, banner oranları */
+.acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.acts .btn{display:inline-flex;align-items:center;gap:2px}
+.acts .ic{font-size:1rem;line-height:1}
+@media(max-width:560px){
+  .acts{justify-content:stretch;width:100%}
+  .acts .btn{flex:1 1 42px;justify-content:center;min-height:40px;padding:6px 4px}
+  .acts .lb{display:none}
+  .foot{flex-direction:column;align-items:stretch}
+}
+.spbox img{width:100%;display:block;object-fit:cover}
+.spbox.s-top img,.spbox.s-bottom img{aspect-ratio:4/1}
+.spbox.s-feed img{aspect-ratio:4/3}
+.favnote{font-size:.85rem;padding:6px 8px;border-radius:8px;background:var(--panel2);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.favnote.dn{border:1px solid var(--ok);color:var(--ok)}.favnote.up{border:1px solid var(--bad);color:var(--bad)}
+.chatrow{cursor:pointer}
+.chatlog{height:min(46vh,360px);overflow:auto;display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--input);border:1px solid var(--line);border-radius:12px;margin:8px 0}
+.msg{max-width:82%;padding:7px 10px;border-radius:12px;word-break:break-word;font-size:.92rem}
+.msg small{display:block;font-size:.65rem;opacity:.7;margin-top:2px}
+.msg.me{align-self:flex-end;background:var(--gold);color:var(--on-gold);border-bottom-right-radius:4px}
+.msg.you{align-self:flex-start;background:var(--panel2);border-bottom-left-radius:4px}
+.mut-note{color:var(--mute);font-size:.85rem;text-align:center;padding:10px}
+.chatq{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}

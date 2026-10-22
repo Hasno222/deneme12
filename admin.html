@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#14100d">
-<link rel="stylesheet" href="theme.css?v=3">
-<script src="theme.js?v=3"></script>
+<link rel="stylesheet" href="theme.css?v=4">
+<script src="theme.js?v=4"></script>
 <title>Yönetim Paneli · Mobile2 Pazar</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -74,8 +74,11 @@ code{background:var(--input);padding:2px 6px;border-radius:6px;word-break:break-
 .slotc{border:1px dashed var(--line);border-radius:10px;padding:8px;text-align:center;font-size:.8rem;color:var(--mute);display:flex;flex-direction:column;gap:2px;position:relative;word-break:break-all}
 .slotc b{color:var(--text)}.slotc.used{border-style:solid;border-color:var(--warn);color:var(--text)}
 .slotc button{background:none;border:none;color:var(--bad);cursor:pointer;position:absolute;top:2px;right:4px;font-size:1rem}
-.adprev{max-width:100%;max-height:90px;border-radius:8px;border:1px solid var(--line)}
+.spprev{max-width:100%;max-height:90px;border-radius:8px;border:1px solid var(--line)}
 @media(min-width:1100px){.g3{display:grid;grid-template-columns:1fr 1fr;gap:10px}}
+.xb{background:none;border:none;color:var(--bad);cursor:pointer;font-size:1rem;padding:0 4px}
+.sizeinfo{border:1px dashed var(--gold);border-radius:12px;padding:10px;color:var(--text);font-size:.85rem}
+.chatbox{border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:4px}
 </style>
 </head>
 <body>
@@ -88,7 +91,7 @@ code{background:var(--input);padding:2px 6px;border-radius:6px;word-break:break-
       <button class="chip" data-s="ilan">📜 İlanlar</button><button class="chip" data-s="kullanici">👥 Kullanıcılar</button>
       <button class="chip" data-s="oneri">⭐ Öne çıkanlar</button><button class="chip" data-s="premium">💎 Premium pazar</button>
       <button class="chip" data-s="reklam">📢 Reklamlar</button><button class="chip" data-s="paket">📦 Paketler</button>
-      <button class="chip" data-s="katalog">🗂 Katalog</button><button class="chip" data-s="ayar">⚙️ Ayarlar</button>
+      <button class="chip" data-s="katalog">🗂 Katalog</button><button class="chip" data-s="entegre">🔌 Entegrasyonlar</button><button class="chip" data-s="ayar">⚙️ Ayarlar</button>
       <button class="chip" data-s="duyuru">📣 Duyurular</button><button class="chip" data-s="guvenlik">🔐 Güvenlik</button>
       <button class="chip" data-s="kayit">🧾 Kayıt</button>
     </nav>
@@ -105,7 +108,8 @@ const fmt=n=>Number(n).toLocaleString('tr-TR',{maximumFractionDigits:2});
 const nowIso=()=>new Date().toISOString();
 const dt=s=>s?new Date(s).toLocaleString('tr-TR',{dateStyle:'short',timeStyle:'short'}):'-';
 const clean=s=>String(s||'').trim().replace(/[%*,()\\]/g,' ').replace(/\s+/g,' ');
-let toastT;const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),3000)};
+const fr=m=>{m=(m&&m.message)||String(m||'');return /failed to fetch|networkerror|load failed/i.test(m)?'Bağlantı kurulamadı. Bir tarayıcı eklentisi (reklam engelleyici vb.) isteği engelliyor olabilir; bu siteyi eklentiden hariç tut ve tekrar dene.':m};
+let toastT;const toast=m=>{const t=$('#toast');t.textContent=fr(m);t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),3000)};
 const log=(a,d)=>sb.from('admin_log').insert([{action:a,detail:String(d||'').slice(0,300)}]).then(()=>{},()=>{});
 
 let OF={};
@@ -170,7 +174,7 @@ async ozet(){
   const att=[];
   if(st.feedback)att.push(`<button class="btn sm gold" data-go="bildirim">📨 ${st.feedback} bekleyen bildirim</button>`);
   if(st.soon)att.push(`<button class="btn sm" data-go="premium">⏳ ${st.soon} premium/reklam kaydı 3 gün içinde bitiyor</button>`);
-  const KEYS=['maintenance','posting_open','signups_open','items_enabled','yang_enabled','featured_enabled','premium_enabled','ads_enabled','feedback_enabled'];
+  const KEYS=['maintenance','posting_open','signups_open','items_enabled','yang_enabled','featured_enabled','premium_enabled','ads_enabled','feedback_enabled','chat_enabled','favorites_enabled'];
   return `<div class="stats">${bx(st.users,'Toplam kullanıcı','kullanici')}${bx(st.users7d,'Son 7 gün kayıt','kullanici')}${bx(st.items,'Aktif item ilanı','ilan')}${bx(st.yang,'Aktif yang ilanı','ilan')}${bx(st.new24h,'Son 24 saatte ilan','ilan')}${bx(st.featured,'Öne çıkan ilan','oneri')}${bx(st.rentals,'Kiradaki premium alan','premium')}${bx(st.ads,'Yayındaki reklam','reklam')}${bx(st.adclicks,'Toplam reklam tıklaması','reklam')}${bx(st.paid,'Paketli kullanıcı','kullanici')}${bx(st.feedback,'Bekleyen bildirim','bildirim')}${bx(st.banned,'Yasaklı','kullanici')}</div>
   <h3>Son 14 gün: açılan ilanlar</h3><div class="card"><div class="chart">${bars}</div><div class="mut">Toplam ${sum('n_items')} item + ${sum('n_yang')} yang ilanı · ${sum('n_users')} yeni kullanıcı</div></div>
   <h3>Dikkat gerekenler</h3>${att.length?`<div class="acts">${att.join('')}</div>`:'<div class="mut">Şu an bekleyen bir şey yok 🎉</div>'}
@@ -189,6 +193,7 @@ async bildirim(){
       if(p&&f.user_id)acts+=`<button class="btn sm gold" data-a="planassign" data-id="${f.id}" data-uid="${f.user_id}" data-plan="${p.id}" data-days="${p.duration_days}">Paketi ata (${p.duration_days} gün)</button>`}
     else if(f.ref&&f.ref.startsWith('slot:')){const [,pos,oid]=f.ref.split(':'),o=OF[oid],dd=o?o.days:7;ref=`<div class="mut">Premium alan talebi: <b>Alan #${esc(pos)}</b>${o?` · ${dd} gün`:''}</div>`;
       if(f.user_id)acts+=`<button class="btn sm gold" data-a="slotassign" data-id="${f.id}" data-uid="${f.user_id}" data-pos="${esc(pos)}" data-days="${dd}">Alanı ata (${dd} gün)</button>`}
+    else if(f.ref&&f.ref.startsWith('chat:')){ref=`<div class="mut">Sohbet şikayeti: <b>#${esc(f.ref.slice(5))}</b></div>`;acts+=`<button class="btn sm" data-a="chatread" data-cid="${esc(f.ref.slice(5))}" data-fb="${f.id}" data-uid="${f.user_id||''}">Sohbeti oku</button>`}
     else if(f.ref&&f.ref.startsWith('ad:')){ref=`<div class="mut">Reklam talebi: <b>${esc(f.ref.slice(3))}</b> alanı</div>`;acts+=`<button class="btn sm gold" data-go="reklam">Reklam oluştur</button>`}
     else if(f.ref){ref=`<div class="mut">İlan: <b>${esc(f.ref.replace('items:','İtem #').replace('yang_listings:','Yang #'))}</b></div>`;
       acts+=`<button class="btn sm bad" data-a="refdel" data-id="${f.id}" data-ref="${esc(f.ref)}">İlanı sil</button><button class="btn sm bad" data-a="refban" data-id="${f.id}" data-ref="${esc(f.ref)}">Satıcıyı yasakla</button>`}
@@ -216,43 +221,67 @@ async ilan(){
   <h3>Yang ilanları (${b.data.length})</h3>${b.data.map(r=>lc(r,'yang_listings')).join('')||'<div class="empty">Yok</div>'}`;
 },
 async kullanici(){
-  const [u,pl]=await Promise.all([sb.rpc('admin_users',{q:UQ||null}),sb.from('plans').select('id,name,duration_days').order('sort')]);
+  const [u,pl]=await Promise.all([sb.rpc('admin_users',{q:UQ||null}),sb.from('plans').select('id,name,kind,duration_days').order('kind').order('sort')]);
   if(u.error)throw u.error;
-  const op=(pl.data||[]).map(p=>`<option value="${p.id}" data-d="${p.duration_days}">${esc(p.name)}</option>`).join('');
+  const ic=k=>k==='featured'?'⭐':'📦';
+  const op=(pl.data||[]).map(p=>`<option value="${p.id}" data-d="${p.duration_days}">${ic(p.kind)} ${esc(p.name)}</option>`).join('');
   const first=(pl.data||[])[0];
-  const cards=u.data.map(x=>`<div class="card"><div class="head"><b style="word-break:break-all">${esc(x.mail||'(e-postasız)')}</b>${x.is_adm?'<span class="tag grn">Yönetici</span>':''}</div>
-    <div class="mut">Kayıt: ${dt(x.joined)} · Son giriş: ${dt(x.last_login)} · Aktif ilan: <b>${x.active_n}</b></div>
-    <div class="mut">${x.is_ban?'<span class="tag red">Yasaklı</span>':''}${x.plan_name?`<span class="tag grn">📦 ${esc(x.plan_name)}</span> ${dt(x.plan_until)} tarihine kadar`:'Paket yok'}</div>
+  const cards=u.data.map(x=>{
+    const plans=(x.plans||[]).map(p=>`<span class="tag grn">${ic(p.kind)} ${esc(p.name)} · ${dt(p.until)} <button class="xb" data-a="uplandel" data-id="${p.id}" title="Bu paketi kaldır">×</button></span>`).join('')||'<span class="mut">Paket yok</span>';
+    return `<div class="card"><div class="head"><b style="word-break:break-all">${x.mail?esc(x.mail):'<span class="tag red">e-postasız hesap</span>'}</b>${x.is_adm?'<span class="tag grn">Yönetici</span>':''}</div>
+    <div class="mut">Kayıt: ${dt(x.joined)} · Son giriş: ${dt(x.last_login)} · Giriş yöntemi: <b>${esc(x.provider)}</b> · Aktif ilan: <b>${x.active_n}</b></div>
+    <div>${x.is_ban?'<span class="tag red">Yasaklı</span> ':''}${plans}</div>
     ${op?`<div class="g2"><select class="plsel">${op}</select><input class="days" type="number" min="1" max="365" value="${first?first.duration_days:30}" aria-label="Gün"></div>`:'<div class="mut">Önce Paketler bölümünden paket oluştur.</div>'}
-    <div class="acts">${op?`<button class="btn sm gold" data-a="ugrant" data-uid="${x.uid}">Paketi ata</button>`:''}<button class="btn sm" data-a="urevoke" data-uid="${x.uid}">Paketi kaldır</button>
+    <div class="acts">${op?`<button class="btn sm gold" data-a="ugrant" data-uid="${x.uid}">Paketi ata / süre uzat</button>`:''}
     ${x.is_adm?'':(x.is_ban?`<button class="btn sm ok" data-a="uunban" data-uid="${x.uid}">Yasağı kaldır</button>`:`<button class="btn sm bad" data-a="uban" data-uid="${x.uid}">Yasakla</button>`)}
-    <button class="btn sm bad" data-a="udel" data-uid="${x.uid}">İlanlarını sil</button></div></div>`).join('');
-  return `<div style="display:flex;gap:8px;margin-bottom:10px"><input id="uq" placeholder="E-posta ara…" value="${esc(UQ)}"><button class="btn gold" data-a="usearch">Ara</button></div>${cards||'<div class="empty">Kullanıcı bulunamadı</div>'}<p class="mut">En yeni 30 kayıt gösterilir. Yönetici ekleme/çıkarma güvenlik için sadece SQL Editor'dan yapılır.</p>`;
+    <button class="btn sm bad" data-a="udel" data-uid="${x.uid}">İlanlarını sil</button>
+    ${x.is_adm?'':`<button class="btn sm bad" data-a="udeluser" data-uid="${x.uid}" data-mail="${esc(x.mail||'')}">🗑 Kullanıcıyı sil</button>`}</div></div>`}).join('');
+  return `<div style="display:flex;gap:8px;margin-bottom:10px"><input id="uq" placeholder="E-posta ara…" value="${UQ==='@@yok'?'':esc(UQ)}"><button class="btn gold" data-a="usearch">Ara</button></div>
+  <div class="acts" style="margin-bottom:10px"><button class="btn sm" data-a="usearch" data-q="@@yok">E-postasız hesapları göster</button><button class="btn sm" data-a="usearch" data-q="">Tümünü göster</button></div>
+  ${cards||'<div class="empty">Kullanıcı bulunamadı</div>'}<p class="mut">En yeni 40 kayıt gösterilir. "Kullanıcıyı sil" hesabı, ilanlarını, mesajlarını ve favorilerini kalıcı siler. Yönetici hesapları panelden silinemez (güvenlik).</p>`;
 },
 async katalog(){
-  const sub=chips([['item','⚔️ İtemler'],['efsun','✨ Efsunlar'],['tas','💎 Taşlar']],CATSUB,'catsub');
+  const sub=chips([['item','⚔️ İtemler'],['efsun','✨ Efsunlar'],['tas','💎 Taşlar'],['srv','📍 Sunucular']],CATSUB,'catsub');
   if(CATSUB==='item'){
     const {data,error}=await sb.from('item_catalog').select('*').order('category').order('name').limit(1000);if(error)throw error;
     const by={};data.forEach(r=>(by[r.category]=by[r.category]||[]).push(r));
     return sub+`<div class="card"><b>İtem ekle</b><label>Kategori<input id="cc" list="cl" maxlength="30" placeholder="Silah, Zırh, Kask…"></label><datalist id="cl">${Object.keys(by).map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
     <label>İtem adları (her satıra bir tane)<textarea id="cn" rows="3" maxlength="800"></textarea></label><div><button class="btn gold" data-a="catadd" data-t="item_catalog">Ekle</button></div>
-    <div class="mut">Taş seçeneği sadece <b>Silah</b> ve <b>Zırh</b> kategorilerinde açılır.</div></div>`
+    <div class="mut">Taş eklenebilen kategoriler Ayarlar → Limitler bölümündeki "Taş eklenebilen kategoriler" ayarından belirlenir.</div></div>`
     +Object.entries(by).map(([c,r])=>`<h3>${esc(c)} (${r.length})</h3><div>${r.map(x=>`<span class="c2">${esc(x.name)}<button data-a="catdel" data-t="item_catalog" data-id="${x.id}" aria-label="Sil">×</button></span>`).join('')}</div>`).join('');
   }
-  const t=CATSUB==='efsun'?'efsun_catalog':'stone_catalog',{data,error}=await sb.from(t).select('*').order('name').limit(1000);if(error)throw error;
-  return sub+`<div class="card"><b>${CATSUB==='efsun'?'Efsun':'Taş'} ekle</b><label>Adlar (her satıra bir tane)<textarea id="cn" rows="3" maxlength="800"></textarea></label><div><button class="btn gold" data-a="catadd" data-t="${t}">Ekle</button></div></div>
+  if(CATSUB==='srv'){
+    const {data,error}=await sb.from('servers').select('*').order('sort').order('name');if(error)throw error;
+    const row=s=>`<div class="card srv" data-id="${s.id}"><div class="g2"><label>Ad<input name="name" maxlength="30" value="${esc(s.name)}"></label><label>Sıra<input name="sort" type="number" min="0" max="999" value="${s.sort}"></label></div><label class="chk"><input name="active" type="checkbox" ${s.active?'checked':''}> Açık (yeni ilan verilebilir)</label><div class="acts"><button class="btn sm gold" data-a="srvsave">${s.id==='new'?'Ekle':'Kaydet'}</button>${s.id==='new'?'':'<button class="btn sm bad" data-a="srvdel">Sil</button>'}</div></div>`;
+    return sub+`<h3>Yeni sunucu</h3>${row({id:'new',name:'',sort:data.length+1,active:true})}<h3>Sunucular (${data.length})</h3><div class="g3">${data.map(row).join('')}</div><p class="mut">Sunucu kapatılırsa yeni ilan verilemez, eski ilanlar kalır. Silmek yerine kapatmanı öneririz.</p>`;
+  }
+  if(CATSUB==='efsun'){
+    const {data,error}=await sb.from('efsun_catalog').select('*').order('name').limit(1000);if(error)throw error;
+    await loadSet();const def=S('efsun_max_default')?S('efsun_max_default').value:'100';
+    return sub+`<div class="card"><b>Efsun ekle</b><label>Adlar (her satıra bir tane)<textarea id="cn" rows="3" maxlength="800"></textarea></label><div><button class="btn gold" data-a="catadd" data-t="efsun_catalog">Ekle</button></div></div>
+    <div class="mut">Her efsunun kullanıcıdan kabul edilen <b>en yüksek değerini</b> yaz (ör. Max HP için 2000). Boş bırakılırsa genel sınır (<b>${esc(def)}</b>) geçerli; genel sınırı Ayarlar → Limitler'den değiştirirsin.</div>
+    <div class="g3">${data.map(x=>`<div class="card efr" data-id="${x.id}"><div class="head"><b>${esc(x.name)}</b><button class="xb" data-a="catdel" data-t="efsun_catalog" data-id="${x.id}" aria-label="Sil">×</button></div><div class="g2"><label>Üst sınır<input name="max" type="number" min="1" max="9999" value="${x.max_value||''}" placeholder="${esc(def)}"></label><div style="align-self:end"><button class="btn sm gold" data-a="efmax">Kaydet</button></div></div></div>`).join('')||'<div class="empty">Liste boş</div>'}</div>`;
+  }
+  const t='stone_catalog',{data,error}=await sb.from(t).select('*').order('name').limit(1000);if(error)throw error;
+  return sub+`<div class="card"><b>Taş ekle</b><label>Adlar (her satıra bir tane)<textarea id="cn" rows="3" maxlength="800"></textarea></label><div><button class="btn gold" data-a="catadd" data-t="${t}">Ekle</button></div></div>
   <div>${data.map(x=>`<span class="c2">${esc(x.name)}<button data-a="catdel" data-t="${t}" data-id="${x.id}" aria-label="Sil">×</button></span>`).join('')||'<div class="empty">Liste boş</div>'}</div>
   <p class="mut">Silinen öğeler yeni ilanlarda seçilemez; mevcut ilanlar etkilenmez.</p>`;
 },
 async paket(){
-  const {data,error}=await sb.from('plans').select('*').order('sort').order('listing_limit');if(error)throw error;
-  const form=p=>`<div class="card plan" data-id="${p.id}"><div class="g2"><label>Paket adı<input name="name" maxlength="40" value="${esc(p.name)}"></label><label>Fiyat yazısı<input name="price_text" maxlength="40" placeholder="50 TL" value="${esc(p.price_text||'')}"></label>
-    <label>Aynı anda aktif ilan<input name="listing_limit" type="number" min="1" max="1000" value="${p.listing_limit}"></label><label>Öne çıkarma hakkı<input name="featured_slots" type="number" min="0" max="100" value="${p.featured_slots||0}"></label><label>Süre (gün)<input name="duration_days" type="number" min="1" max="365" value="${p.duration_days}"></label>
-    <label>Sıra<input name="sort" type="number" min="0" max="999" value="${p.sort}"></label><label class="chk" style="margin-top:18px"><input name="active" type="checkbox" ${p.active?'checked':''}> Kullanıcılara göster</label></div>
+  const {data,error}=await sb.from('plans').select('*').order('kind').order('sort').order('listing_limit');if(error)throw error;
+  const form=p=>{const f=p.kind==='featured';return `<div class="card plan" data-id="${p.id}"><div class="g2">
+    <label>Paket türü<select name="kind"><option value="listing" ${f?'':'selected'}>📦 İlan paketi (aynı anda aktif ilan)</option><option value="featured" ${f?'selected':''}>⭐ Öne çıkarma paketi</option></select></label>
+    <label>Hak (adet)<input name="amount" type="number" min="1" max="1000" value="${f?p.featured_slots:p.listing_limit}"></label>
+    <label>Paket adı<input name="name" maxlength="40" value="${esc(p.name)}"></label><label>Fiyat yazısı<input name="price_text" maxlength="40" placeholder="50 TL" value="${esc(p.price_text||'')}"></label>
+    <label>Süre (gün)<input name="duration_days" type="number" min="1" max="365" value="${p.duration_days}"></label><label>Gösterim sırası (küçük olan önce)<input name="sort" type="number" min="0" max="999" value="${p.sort}"></label></div>
+    <label class="chk"><input name="active" type="checkbox" ${p.active?'checked':''}> Kullanıcılara göster</label>
     <label>Açıklama<textarea name="description" rows="2" maxlength="200">${esc(p.description||'')}</textarea></label>
-    <div class="acts"><button class="btn sm gold" data-a="plsave">${p.id==='new'?'Paketi ekle':'Kaydet'}</button>${p.id==='new'?'':'<button class="btn sm bad" data-a="pldel">Sil</button>'}</div></div>`;
-  return `<h3>Yeni paket</h3>${form({id:'new',name:'',price_text:'',featured_slots:1,listing_limit:5,duration_days:30,sort:0,active:true,description:''})}<h3>Paketler (${data.length})</h3>${data.map(form).join('')||'<div class="empty">Henüz paket yok</div>'}
-  <p class="mut">Ödeme sistemi yok: kullanıcı paket ister, bildirim sana gelir, ödemeyi aldıktan sonra Bildirimler veya Kullanıcılar bölümünden paketi tek tıkla atarsın.</p>`;
+    <div class="acts"><button class="btn sm gold" data-a="plsave">${p.id==='new'?'Paketi ekle':'Kaydet'}</button>${p.id==='new'?'':'<button class="btn sm bad" data-a="pldel">Sil</button>'}</div></div>`};
+  const L=data.filter(p=>p.kind!=='featured'),F=data.filter(p=>p.kind==='featured');
+  return `<h3>Yeni paket</h3>${form({id:'new',kind:'listing',name:'',price_text:'',listing_limit:5,featured_slots:0,duration_days:30,sort:0,active:true,description:''})}
+  <h3>📦 İlan paketleri (${L.length})</h3><div class="g3">${L.map(form).join('')||'<div class="empty">Yok</div>'}</div>
+  <h3>⭐ Öne çıkarma paketleri (${F.length})</h3><div class="g3">${F.map(form).join('')||'<div class="empty">Yok</div>'}</div>
+  <div class="mut">• <b>Gösterim sırası:</b> kullanıcıya paketler listelenirken küçük sayı önce çıkar (1 en üstte). Önemli değilse hepsini 0 bırakabilirsin.<br>• Aynı türdeki farklı paketler birleşmez; kullanıcıda en yüksek hak geçerli olur.<br>• Aynı paketi tekrar atarsan <b>ikinci kayıt oluşmaz, süre uzar</b> (yenileme).<br>• Ödeme sistemi yok: kullanıcı paket ister, ödemeyi alınca Bildirimler'den tek tıkla ata.</div>`;
 },
 async oneri(){
   const now=nowIso(),mk=t=>sb.from(t).select('*').eq('featured',true).eq('status','active').gt('expires_at',now).order('created_at',{ascending:false}).limit(60);
@@ -277,21 +306,35 @@ async premium(){
   <h3>Kiralama seçenekleri (zamana göre fiyat)</h3>${of({id:'new',name:'',price_text:'',days:7,sort:0,active:true})}${o.data.map(of).join('')}`;
 },
 async reklam(){
-  const {data,error}=await sb.from('ads').select('*').order('created_at',{ascending:false}).limit(100);if(error)throw error;
+  const {data,error}=await sb.from('spotlights').select('*').order('created_at',{ascending:false}).limit(100);if(error)throw error;
   const loc=d=>{const x=new Date(d);return new Date(x.getTime()-x.getTimezoneOffset()*60000).toISOString().slice(0,16)};
   const so=(v,c)=>v===c?'selected':'';
-  const form=a=>`<div class="card adf" data-id="${a.id}"><div class="g2"><label>Alan<select name="slot"><option value="top" ${so('top',a.slot)}>Üst banner</option><option value="feed" ${so('feed',a.slot)}>Liste arası</option><option value="bottom" ${so('bottom',a.slot)}>Alt banner</option></select></label><label>Tür<select name="kind"><option value="text" ${so('text',a.kind)}>Yazı</option><option value="image" ${so('image',a.kind)}>Görsel</option></select></label>
+  const form=a=>`<div class="card spf" data-id="${a.id}"><div class="g2"><label>Alan<select name="slot"><option value="top" ${so('top',a.slot)}>Üst banner</option><option value="feed" ${so('feed',a.slot)}>Liste arası</option><option value="bottom" ${so('bottom',a.slot)}>Alt banner</option></select></label><label>Tür<select name="kind"><option value="text" ${so('text',a.kind)}>Yazı</option><option value="image" ${so('image',a.kind)}>Görsel</option></select></label>
     <label>Başlık<input name="title" maxlength="60" value="${esc(a.title||'')}"></label><label>Reklam veren<input name="advertiser" maxlength="60" value="${esc(a.advertiser||'')}"></label>
     <label>Başlangıç<input name="starts_at" type="datetime-local" value="${loc(a.starts_at)}"></label><label>Bitiş<input name="ends_at" type="datetime-local" value="${loc(a.ends_at)}"></label></div>
     <label>Kısa yazı (yazı türü)<input name="body" maxlength="160" value="${esc(a.body||'')}"></label>
-    <label>Görsel adresi (https://…, görsel türü)<input name="image_url" maxlength="500" value="${esc(a.image_url||'')}"></label>
+    <label>Görsel yükle (otomatik boyutlanır) <input type="file" data-up accept="image/jpeg,image/png,image/webp"></label>
+    <label>veya görsel adresi (https://…)<input name="image_url" maxlength="500" value="${esc(a.image_url||'')}"></label>
     <label>Tıklanınca gidilecek adres<input name="link_url" maxlength="500" placeholder="https://" value="${esc(a.link_url||'')}"></label>
     <label class="chk"><input name="active" type="checkbox" ${a.active?'checked':''}> Yayında</label>
-    ${a.id!=='new'?`<div class="mut">${a.image_url&&/^https:/.test(a.image_url)?`<img class="adprev" src="${esc(a.image_url)}" alt=""><br>`:''}Gösterim: <b>${fmt(a.views)}</b> · Tıklama: <b>${fmt(a.clicks)}</b> · Oran: <b>${a.views?(a.clicks/a.views*100).toFixed(1):'0'}%</b> · ${!a.active?'<span class="tag">Pasif</span>':new Date(a.ends_at)<new Date()?'<span class="tag red">Bitti</span>':new Date(a.starts_at)>new Date()?'<span class="tag">Bekliyor</span>':'<span class="tag grn">Yayında</span>'}</div>`:''}
+    <div class="mut spv">${a.image_url&&/^https:/.test(a.image_url)?`<img class="spprev" src="${esc(a.image_url)}" alt="">`:''}</div>
+    ${a.id!=='new'?`<div class="mut">Gösterim: <b>${fmt(a.views)}</b> · Tıklama: <b>${fmt(a.clicks)}</b> · Oran: <b>${a.views?(a.clicks/a.views*100).toFixed(1):'0'}%</b> · ${!a.active?'<span class="tag">Pasif</span>':new Date(a.ends_at)<new Date()?'<span class="tag red">Bitti</span>':new Date(a.starts_at)>new Date()?'<span class="tag">Bekliyor</span>':'<span class="tag grn">Yayında</span>'}</div>`:''}
     <div class="acts"><button class="btn sm gold" data-a="adsave">${a.id==='new'?'Reklamı ekle':'Kaydet'}</button>${a.id==='new'?'':'<button class="btn sm bad" data-a="addel">Sil</button>'}</div></div>`;
   const nw={id:'new',slot:'top',kind:'text',title:'',advertiser:'',starts_at:nowIso(),ends_at:new Date(Date.now()+30*864e5).toISOString(),body:'',image_url:'',link_url:'',active:true};
-  return `<div class="mut">Alanlar: <b>Üst banner</b> (listenin üstü), <b>Liste arası</b> (her N ilanda bir; N Ayarlar'dan), <b>Alt banner</b>. Boş alanlarda "reklam ver" kutusu görünür (Ayarlar'dan kapatılabilir). Güvenlik için sadece yazı veya görsel + bağlantı kabul edilir.</div>
+  return `<div class="sizeinfo"><b>📐 Görsel boyutları:</b><br>• <b>Üst banner ve Alt banner:</b> 1200 × 300 piksel (4:1, yatay şerit)<br>• <b>Liste arası:</b> 600 × 450 piksel (4:3, kart boyutu)<br>Dosya yüklediğinde görsel <b>otomatik ortalanıp kırpılarak</b> seçtiğin alanın boyutuna getirilir (JPG/PNG/WebP, en çok 8 MB; sitede ~200 KB'a küçülür). Oranı tutturursan hiç kırpılmaz. Önemli yazıları görselin ortasına koy.<br>Önce <b>Alan</b>'ı seç, sonra görseli yükle (boyut alana göre ayarlanır).</div>
+  <div class="mut" style="margin-top:8px">Alanlar: <b>Üst banner</b> (listenin üstü), <b>Liste arası</b> (her N ilanda bir; N Ayarlar'dan), <b>Alt banner</b>. Boş alanlarda "reklam ver" kutusu görünür (Ayarlar'dan kapatılabilir). Güvenlik için sadece yazı veya görsel + bağlantı kabul edilir.</div>
   <h3>Yeni reklam</h3>${form(nw)}<h3>Reklamlar (${data.length})</h3><div class="g3">${data.map(form).join('')||'<div class="empty">Henüz reklam yok</div>'}</div>`;
+},
+async entegre(){
+  await loadSet();
+  const {data,error}=await sb.from('integrations').select('*');if(error)throw error;
+  const has=!!((data||[]).find(x=>x.key==='discord_webhook')||{}).value;
+  return `<div class="card"><b>🎮 Discord: yeni ilanlar kanala düşsün</b>
+   <div class="mut">Discord'da bir kanal aç → Kanal Ayarları → Entegrasyonlar → Webhook → "Webhook URL'sini kopyala". Adresi aşağıya yapıştır. Adres gizli tutulur; sadece yönetici okuyabilir.</div>
+   <label>Webhook adresi<input id="wh" type="password" autocomplete="off" placeholder="${has?'Kayıtlı. Değiştirmek için yeni adres yaz':'https://discord.com/api/webhooks/…'}"></label>
+   <div class="acts"><button class="btn sm gold" data-a="integsave">Kaydet</button>${has?'<button class="btn sm bad" data-a="integclear">Adresi kaldır</button>':''}<button class="btn sm" data-a="integtest">Test mesajı gönder</button></div></div>
+   ${setRow('discord_notify')}${setRow('site_url')}
+   <div class="mut">Sıra: webhook'u kaydet → "Test mesajı" ile dene → yukarıdaki anahtarı aç. Sitenin adresini (site_url) girersen Discord'daki ilan başlığı ilana giden link olur. Discord'a ulaşılamasa bile ilan ekleme asla engellenmez.</div>`;
 },
 async ayar(){
   await loadSet();
@@ -355,10 +398,24 @@ async refban(b){
   await sb.from('feedback').update({status:'cozuldu'}).eq('id',b.dataset.id);done('Kullanıcı yasaklandı.');
 },
 async planassign(b){
-  const d=b.dataset,days=+d.days;
-  const {error}=await sb.from('user_plans').insert([{user_id:d.uid,plan_id:+d.plan,expires_at:new Date(Date.now()+days*864e5).toISOString()}]);
+  const d=b.dataset,{data,error}=await sb.rpc('admin_assign_plan',{p_user:d.uid,p_plan:+d.plan,p_days:+d.days});
   if(error)return toast(error.message);
-  await sb.from('feedback').update({status:'cozuldu'}).eq('id',d.id);log('paket ata',`${d.uid} plan#${d.plan} ${days}g`);done('Paket atandı, talep çözüldü.');
+  await sb.from('feedback').update({status:'cozuldu'}).eq('id',d.id);done('Paket atandı (bitiş: '+dt(data)+'), talep çözüldü.');
+},
+async chatread(b){
+  const cid=b.dataset.cid,c=b.closest('.card');
+  const [cv,ms]=await Promise.all([sb.from('conversations').select('*').eq('id',cid).maybeSingle(),sb.from('messages').select('*').eq('conv_id',cid).order('created_at').limit(200)]);
+  if(cv.error||ms.error)return toast((cv.error||ms.error).message);
+  if(!cv.data)return toast('Sohbet bulunamadı (silinmiş olabilir).');
+  const x=cv.data,other=b.dataset.uid&&b.dataset.uid===x.seller_id?x.buyer_id:x.seller_id;
+  let box=c.querySelector('.chatbox');if(!box){box=document.createElement('div');box.className='chatbox';c.insertBefore(box,c.querySelector('.acts'))}
+  box.innerHTML=`<div class="mut">${esc(x.title)} · satıcı: ${esc(x.seller_nick||'?')}</div>`+(ms.data.map(m=>`<div class="mut"><b>${m.sender_id===x.seller_id?'Satıcı':'Alıcı'}:</b> ${esc(m.body)}</div>`).join('')||'<div class="mut">Mesaj yok</div>')+`<div class="acts"><button class="btn sm bad" data-a="chatban" data-uid="${esc(other)}" data-fb="${esc(b.dataset.fb)}">Karşı tarafı yasakla</button></div>`;
+},
+async chatban(b){
+  if(b.dataset.uid===user.id)return toast('Kendini yasaklayamazsın.');
+  const why=prompt('Yasaklama sebebi (isteğe bağlı). Kullanıcının tüm ilanları silinecek:');if(why===null)return;
+  const e=await banUser(b.dataset.uid,why);if(e)return toast(e.message);
+  await sb.from('feedback').update({status:'cozuldu'}).eq('id',b.dataset.fb);done('Kullanıcı yasaklandı.');
 },
 async lsearch(){LQ=$('#lq').value;LST=$('#lst').value;render()},
 async ldel(b){if(!confirm('İlan silinsin mi?'))return;const {error}=await sb.from(b.dataset.t).delete().eq('id',b.dataset.id);if(error)return toast(error.message);log('ilan sil',b.dataset.t+':'+b.dataset.id);done('Silindi.')},
@@ -367,7 +424,7 @@ async lban(b){
   const why=prompt('Yasaklama sebebi (isteğe bağlı). Kullanıcının tüm ilanları silinecek:');if(why===null)return;
   const e=await banUser(b.dataset.uid,why);e?toast(e.message):done('Kullanıcı yasaklandı.');
 },
-async usearch(){UQ=clean($('#uq').value);render()},
+async usearch(b){UQ=b.dataset.q!==undefined?b.dataset.q:clean($('#uq').value);render()},
 async uban(b){
   if(b.dataset.uid===user.id)return toast('Kendini yasaklayamazsın.');
   const why=prompt('Yasaklama sebebi (isteğe bağlı). Kullanıcının tüm ilanları silinecek:');if(why===null)return;
@@ -377,11 +434,16 @@ async uunban(b){const {error}=await sb.from('banned_users').delete().eq('user_id
 async ugrant(b){
   const c=b.closest('.card'),pid=+c.querySelector('.plsel').value,days=+c.querySelector('.days').value;
   if(!(days>=1&&days<=365))return toast('Gün 1-365 arasında olmalı.');
-  const {error}=await sb.from('user_plans').insert([{user_id:b.dataset.uid,plan_id:pid,expires_at:new Date(Date.now()+days*864e5).toISOString()}]);
-  if(error)return toast(error.message);log('paket ata',`${b.dataset.uid} plan#${pid} ${days}g`);done('Paket atandı.');
+  const {data,error}=await sb.rpc('admin_assign_plan',{p_user:b.dataset.uid,p_plan:pid,p_days:days});
+  if(error)return toast(error.message);done('Paket atandı. Bitiş: '+dt(data));
 },
-async urevoke(b){if(!confirm('Kullanıcının tüm paketleri kaldırılsın mı?'))return;const {error}=await sb.from('user_plans').delete().eq('user_id',b.dataset.uid);if(error)return toast(error.message);log('paket kaldır',b.dataset.uid);done('Paketler kaldırıldı.')},
+async uplandel(b){if(!confirm('Bu paket kullanıcıdan kaldırılsın mı?'))return;const {error}=await sb.from('user_plans').delete().eq('id',b.dataset.id);if(error)return toast(error.message);log('paket kaldır','#'+b.dataset.id);done('Paket kaldırıldı.')},
 async udel(b){if(!confirm('Bu kullanıcının tüm ilanları silinsin mi?'))return;const r=await Promise.all([sb.from('items').delete().eq('user_id',b.dataset.uid),sb.from('yang_listings').delete().eq('user_id',b.dataset.uid)]);const e=r.find(x=>x.error);if(e)return toast(e.error.message);log('ilanları sil',b.dataset.uid);done('İlanlar silindi.')},
+async udeluser(b){
+  const mail=b.dataset.mail||'(e-postasız hesap)';
+  if(prompt(`${mail} hesabı; ilanları, mesajları ve favorileri KALICI silinecek. Onaylamak için SİL yaz:`)!=='SİL')return;
+  const {error}=await sb.rpc('admin_delete_user',{p_uid:b.dataset.uid});if(error)return toast(error.message);done('Kullanıcı silindi.');
+},
 async catsub(b){CATSUB=b.dataset.v;render()},
 async catadd(b){
   const t=b.dataset.t,names=[...new Set($('#cn').value.split('\n').map(x=>x.trim()).filter(Boolean))];
@@ -394,10 +456,11 @@ async catadd(b){
 },
 async catdel(b){if(!confirm('Bu öğe listeden silinsin mi? (Mevcut ilanlar etkilenmez)'))return;const {error}=await sb.from(b.dataset.t).delete().eq('id',b.dataset.id);if(error)return toast(error.message);log('katalog sil',b.dataset.t+'#'+b.dataset.id);done('Silindi.')},
 async plsave(b){
-  const c=b.closest('.plan'),g=n=>c.querySelector(`[name=${n}]`),id=c.dataset.id;
-  const row={name:g('name').value.trim(),price_text:g('price_text').value.trim()||null,listing_limit:+g('listing_limit').value,featured_slots:+g('featured_slots').value||0,duration_days:+g('duration_days').value,sort:+g('sort').value||0,description:g('description').value.trim()||null,active:g('active').checked};
+  const c=b.closest('.plan'),g=n=>c.querySelector(`[name=${n}]`),id=c.dataset.id,kind=g('kind').value,amt=+g('amount').value;
+  const row={kind,name:g('name').value.trim(),price_text:g('price_text').value.trim()||null,listing_limit:kind==='listing'?amt:0,featured_slots:kind==='featured'?amt:0,duration_days:+g('duration_days').value,sort:+g('sort').value||0,description:g('description').value.trim()||null,active:g('active').checked};
   if(row.name.length<2)return toast('Paket adı yaz.');
-  if(!(row.listing_limit>=1&&row.listing_limit<=1000)||!(row.duration_days>=1&&row.duration_days<=365))return toast('Sayıları kontrol et.');
+  if(!(amt>=1&&amt<=(kind==='featured'?100:1000)))return toast(kind==='featured'?'Öne çıkarma hakkı 1-100 arasında olmalı.':'İlan hakkı 1-1000 arasında olmalı.');
+  if(!(row.duration_days>=1&&row.duration_days<=365))return toast('Süre 1-365 gün olmalı.');
   const {error}=id==='new'?await sb.from('plans').insert([row]):await sb.from('plans').update(row).eq('id',id);
   if(error)return toast(error.message);log('paket '+(id==='new'?'ekle':'düzenle'),row.name);done('Kaydedildi.');
 },
@@ -421,6 +484,28 @@ async mfaremove(b){
   if(!confirm('2FA kaldırılsın mı? Hesabın daha az korunur.'))return;
   const {error}=await sb.auth.mfa.unenroll({factorId:b.dataset.id});if(error)return toast(error.message);log('2FA','kaldırıldı');done('Kaldırıldı.');
 },
+async efmax(b){
+  const c=b.closest('.efr'),v=c.querySelector('[name=max]').value.trim(),mx=v===''?null:+v;
+  if(mx!==null&&!(Number.isInteger(mx)&&mx>=1&&mx<=9999))return toast('Üst sınır 1-9999 arasında bir sayı olmalı (ya da boş).');
+  const {error}=await sb.from('efsun_catalog').update({max_value:mx}).eq('id',c.dataset.id);
+  if(error)return toast(error.message);log('efsun sınırı',c.dataset.id+' → '+(mx??'genel'));done('Kaydedildi.');
+},
+async srvsave(b){
+  const c=b.closest('.srv'),g=n=>c.querySelector(`[name=${n}]`),id=c.dataset.id;
+  const row={name:g('name').value.trim(),sort:+g('sort').value||0,active:g('active').checked};
+  if(row.name.length<2)return toast('Sunucu adı yaz.');
+  const {error}=id==='new'?await sb.from('servers').insert([row]):await sb.from('servers').update(row).eq('id',id);
+  if(error)return toast(error.message);log('sunucu',row.name+(row.active?'':' (kapalı)'));done('Kaydedildi.');
+},
+async srvdel(b){if(!confirm('Sunucu silinsin mi? (Kapatmak daha güvenli)'))return;const {error}=await sb.from('servers').delete().eq('id',b.closest('.srv').dataset.id);if(error)return toast(error.message);done('Silindi.')},
+async integsave(){
+  const v=$('#wh').value.trim();
+  if(!/^https:\/\/(discord|discordapp)\.com\/api\/webhooks\/\S+$/i.test(v))return toast('Geçerli bir Discord webhook adresi yapıştır (https://discord.com/api/webhooks/…).');
+  const {error}=await sb.from('integrations').upsert({key:'discord_webhook',value:v,updated_at:nowIso()},{onConflict:'key'});
+  if(error)return toast(error.message);log('entegrasyon','discord webhook kaydedildi');done('Kaydedildi. Şimdi "Test mesajı gönder" ile dene.');
+},
+async integclear(){if(!confirm('Webhook adresi silinsin mi?'))return;const {error}=await sb.from('integrations').upsert({key:'discord_webhook',value:'',updated_at:nowIso()},{onConflict:'key'});if(error)return toast(error.message);log('entegrasyon','discord webhook kaldırıldı');done('Kaldırıldı.')},
+async integtest(){const {data,error}=await sb.rpc('admin_test_discord');if(error)return toast(error.message);toast(data)},
 async unfeat(b){const {error}=await sb.from(b.dataset.t).update({featured:false}).eq('id',b.dataset.id);if(error)return toast(error.message);log('öne çıkarma kaldır',b.dataset.t+':'+b.dataset.id);done('Kaldırıldı.')},
 async slotassign(b){
   const d=b.dataset,{error}=await sb.from('premium_rentals').insert([{pos:+d.pos,user_id:d.uid,ends_at:new Date(Date.now()+(+d.days)*864e5).toISOString()}]);
@@ -443,7 +528,7 @@ async ofsave(b){
 },
 async ofdel(b){if(!confirm('Seçenek silinsin mi?'))return;const {error}=await sb.from('premium_offers').delete().eq('id',b.closest('.offer').dataset.id);if(error)return toast(error.message);done('Silindi.')},
 async adsave(b){
-  const c=b.closest('.adf'),g=n=>c.querySelector(`[name=${n}]`),id=c.dataset.id;
+  const c=b.closest('.spf'),g=n=>c.querySelector(`[name=${n}]`),id=c.dataset.id;
   const kind=g('kind').value,link=g('link_url').value.trim(),img=g('image_url').value.trim();
   const s=new Date(g('starts_at').value),e=new Date(g('ends_at').value);
   const row={slot:g('slot').value,kind,title:g('title').value.trim()||null,body:g('body').value.trim()||null,image_url:img||null,link_url:link,advertiser:g('advertiser').value.trim()||null,active:g('active').checked};
@@ -452,21 +537,53 @@ async adsave(b){
   if(kind==='text'&&!row.title)return toast('Yazı türü için başlık gerekli.');
   if(isNaN(s)||isNaN(e)||e<=s)return toast('Tarihleri kontrol et (bitiş başlangıçtan sonra olmalı).');
   row.starts_at=s.toISOString();row.ends_at=e.toISOString();
-  const {error}=id==='new'?await sb.from('ads').insert([row]):await sb.from('ads').update(row).eq('id',id);
+  const {error}=id==='new'?await sb.from('spotlights').insert([row]):await sb.from('spotlights').update(row).eq('id',id);
   if(error)return toast(error.message);log('reklam '+(id==='new'?'ekle':'düzenle'),(row.advertiser||row.title||'')+' · '+row.slot);done('Kaydedildi.');
 },
-async addel(b){if(!confirm('Reklam silinsin mi?'))return;const {error}=await sb.from('ads').delete().eq('id',b.closest('.adf').dataset.id);if(error)return toast(error.message);log('reklam sil','#'+b.closest('.adf').dataset.id);done('Silindi.')}
+async addel(b){if(!confirm('Reklam silinsin mi?'))return;const {error}=await sb.from('spotlights').delete().eq('id',b.closest('.spf').dataset.id);if(error)return toast(error.message);log('reklam sil','#'+b.closest('.spf').dataset.id);done('Silindi.')}
 };
 $('#main').addEventListener('click',async e=>{
   const g=e.target.closest('[data-go]');if(g)return go(g.dataset.go);
   const b=e.target.closest('[data-a]');if(!b||b.disabled)return;
   b.disabled=true;
-  try{await ACT[b.dataset.a](b)}catch(err){toast(err.message||String(err))}
+  try{await ACT[b.dataset.a](b)}catch(err){toast(err)}
   b.disabled=false;
 });
-$('#main').addEventListener('change',e=>{if(e.target.matches('.plsel')){const o=e.target.selectedOptions[0];e.target.closest('.card').querySelector('.days').value=o?o.dataset.d:''}});
-$('#main').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='uq')ACT.usearch();if(e.key==='Enter'&&e.target.id==='lq')ACT.lsearch()});
+$('#main').addEventListener('change',async e=>{
+  if(e.target.matches('input[type=file][data-up]'))return uploadImg(e.target);
+  if(e.target.matches('.plsel')){const o=e.target.selectedOptions[0];e.target.closest('.card').querySelector('.days').value=o?o.dataset.d:''}});
+$('#main').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='uq')ACT.usearch({dataset:{}});if(e.key==='Enter'&&e.target.id==='lq')ACT.lsearch()});
 
+const SIZES={top:[1200,300],bottom:[1200,300],feed:[600,450]};
+function fitImage(file,w,h){
+  return new Promise((res,rej)=>{
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{URL.revokeObjectURL(url);const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+      const s=Math.max(w/img.width,h/img.height),dw=img.width*s,dh=img.height*s;x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,(w-dw)/2,(h-dh)/2,dw,dh);
+      c.toBlob(b=>b?res(b):rej(new Error('Görsel işlenemedi.')),'image/jpeg',0.86)};
+    img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Görsel okunamadı.'))};
+    img.src=url;
+  });
+}
+async function uploadImg(inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  const c=inp.closest('.spf');
+  if(!/^image\/(jpeg|png|webp)$/.test(f.type)){inp.value='';return toast('Sadece JPG, PNG veya WebP yükle.')}
+  if(f.size>8*1024*1024){inp.value='';return toast('Dosya 8 MB üstünde.')}
+  const slot=c.querySelector('[name=slot]').value,[w,h]=SIZES[slot];
+  try{
+    toast('Görsel hazırlanıyor ve yükleniyor…');
+    const blob=await fitImage(f,w,h);
+    const path=`spot/${Date.now()}-${Math.random().toString(36).slice(2,8)}.jpg`;
+    const {error}=await sb.storage.from('site-media').upload(path,blob,{contentType:'image/jpeg',cacheControl:'31536000'});
+    if(error)throw error;
+    const url=sb.storage.from('site-media').getPublicUrl(path).data.publicUrl;
+    c.querySelector('[name=image_url]').value=url;c.querySelector('[name=kind]').value='image';
+    c.querySelector('.spv').innerHTML=`<img class="spprev" src="${esc(url)}" alt="">`;
+    toast(`Yüklendi: ${w}×${h} px olarak ayarlandı. "Kaydet"e basmayı unutma.`);
+  }catch(e){toast(e)}
+  inp.value='';
+}
 async function render(){
   document.querySelectorAll('#nav .chip').forEach(b=>b.setAttribute('aria-selected',b.dataset.s===SEC));
   const y=scrollY;$('#main').innerHTML='<div class="empty">Yükleniyor…</div>';

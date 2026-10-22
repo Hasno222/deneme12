@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+
+# SITE_ADRESIN yerine kendi adresini yaz (ör. kullanici.github.io/repo)
+Sitemap: https://SITE_ADRESIN/sitemap.xml
